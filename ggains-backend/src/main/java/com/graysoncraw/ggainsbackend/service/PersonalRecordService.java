@@ -4,6 +4,8 @@ import com.graysoncraw.ggainsbackend.model.PersonalRecord;
 import com.graysoncraw.ggainsbackend.model.User;
 import com.graysoncraw.ggainsbackend.repository.PersonalRecordRepository;
 import com.graysoncraw.ggainsbackend.repository.UserRepository;
+import com.graysoncraw.ggainsbackend.repository.WorkoutCycleRepository;
+import com.graysoncraw.ggainsbackend.repository.WorkoutScheduleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +17,9 @@ public class PersonalRecordService {
 
     private final UserRepository userRepository;
     private final PersonalRecordRepository personalRecordRepository;
+    private final WorkoutScheduleRepository workoutScheduleRepository;
+    private final WorkoutCycleRepository workoutCycleRepository;
+    private final WorkoutCycleService workoutCycleService;
 
     public PersonalRecord createPersonalRecord(String firebaseUid, PersonalRecord personalRecord) {
         User user = userRepository.findById(firebaseUid)
@@ -22,7 +27,15 @@ public class PersonalRecordService {
                 .orElseThrow(() -> new IllegalArgumentException("User with Firebase UID " + firebaseUid + " not found"));
 
         personalRecord.setUser(user);
-        return personalRecordRepository.save(personalRecord);
+        PersonalRecord saved = personalRecordRepository.save(personalRecord);
+
+        // Automatically create first cycle once both onboarding prerequisites exist.
+        if (workoutScheduleRepository.findByUser_FirebaseUid(firebaseUid).isPresent()
+                && workoutCycleRepository.findByUser_FirebaseUid(firebaseUid).isEmpty()) {
+            workoutCycleService.createFirstCycle(firebaseUid);
+        }
+
+        return saved;
     }
 
     public PersonalRecord getPersonalRecordByUserFirebaseUid(String firebaseUid) {

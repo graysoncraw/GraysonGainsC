@@ -1,5 +1,7 @@
 package com.graysoncraw.ggainsbackend.service;
 
+import com.graysoncraw.ggainsbackend.dto.PrescribedSetDTO;
+import com.graysoncraw.ggainsbackend.dto.PrescribedWorkoutDTO;
 import com.graysoncraw.ggainsbackend.model.*;
 import com.graysoncraw.ggainsbackend.repository.PersonalRecordRepository;
 import com.graysoncraw.ggainsbackend.repository.UserRepository;
@@ -9,13 +11,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import static com.graysoncraw.ggainsbackend.model.LiftType.*;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +45,10 @@ public class WorkoutCycleService {
      * Create the first workout cycle for a user
      */
     public WorkoutCycle createFirstCycle(String firebaseUid) {
+        if (!workoutCycleRepository.findByUser_FirebaseUid(firebaseUid).isEmpty()) {
+            throw new IllegalStateException("First cycle already exists for user");
+        }
+
         // Verify user exists
         User user = userRepository.findById(firebaseUid)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -59,10 +62,10 @@ public class WorkoutCycleService {
                 .orElseThrow(() -> new IllegalArgumentException("Workout schedule not found for user"));
 
         // Calculate training maxes (90% of PRs)
-        double benchTM = roundToNearest2_5(pr.getBenchPressPR() * 0.90);
-        double squatTM = roundToNearest2_5(pr.getSquatPR() * 0.90);
-        double deadliftTM = roundToNearest2_5(pr.getDeadliftPR() * 0.90);
-        double shoulderPressTM = roundToNearest2_5(pr.getShoulderPressPR() * 0.90);
+        double benchTM = roundToNearest5(pr.getBenchPressPR() * 0.90);
+        double squatTM = roundToNearest5(pr.getSquatPR() * 0.90);
+        double deadliftTM = roundToNearest5(pr.getDeadliftPR() * 0.90);
+        double shoulderPressTM = roundToNearest5(pr.getShoulderPressPR() * 0.90);
 
         // Calculate end date (4 weeks from start)
         LocalDate startDate = schedule.getCycleStartDate();
@@ -98,7 +101,7 @@ public class WorkoutCycleService {
     /**
      * Calculate the prescribed workout for a given date
      */
-    public Map<String, Object> calculatePrescribedWorkout(String firebaseUid, LocalDate date) {
+    public PrescribedWorkoutDTO calculatePrescribedWorkout(String firebaseUid, LocalDate date) {
         // Get active cycle
         WorkoutCycle cycle = getActiveCycle(firebaseUid);
 
@@ -124,13 +127,13 @@ public class WorkoutCycleService {
         double trainingMax = getTrainingMaxForLift(cycle, todaysLift);
 
         // Calculate the prescribed sets
-        Map<String, Object> workout = new HashMap<>();
-        workout.put("date", date);
-        workout.put("weekNumber", weekNumber);
-        workout.put("liftType", todaysLift);
-        workout.put("trainingMax", trainingMax);
-        workout.put("sets", calculateSets(trainingMax, weekNumber));
-        workout.put("isDeload", weekNumber == 4);
+        var workout = new PrescribedWorkoutDTO();
+        workout.setDate(date);
+        workout.setWeekNumber(weekNumber);
+        workout.setLiftType(todaysLift);
+        workout.setTrainingMax(trainingMax);
+        workout.setSets(calculateSets(trainingMax, weekNumber));
+        workout.setIsDeload(weekNumber == 4);
 
         return workout;
     }
@@ -149,13 +152,13 @@ public class WorkoutCycleService {
         // Calculate new training maxes with progression
         // Upper body (bench, shoulder press): +5 lbs
         // Lower body (squat, deadlift): +10 lbs
-        double newBenchTM = roundToNearest2_5(currentCycle.getBenchTrainingMax() + 5);
-        double newSquatTM = roundToNearest2_5(currentCycle.getSquatTrainingMax() + 10);
-        double newDeadliftTM = roundToNearest2_5(currentCycle.getDeadliftTrainingMax() + 10);
-        double newShoulderPressTM = roundToNearest2_5(currentCycle.getShoulderPressTrainingMax() + 5);
+        double newBenchTM = roundToNearest5(currentCycle.getBenchTrainingMax() + 5);
+        double newSquatTM = roundToNearest5(currentCycle.getSquatTrainingMax() + 10);
+        double newDeadliftTM = roundToNearest5(currentCycle.getDeadliftTrainingMax() + 10);
+        double newShoulderPressTM = roundToNearest5(currentCycle.getShoulderPressTrainingMax() + 5);
 
         // New cycle starts today
-        LocalDate newStartDate = LocalDate.now();
+        LocalDate newStartDate = currentCycle.getEndDate().plusDays(1);
         LocalDate newEndDate = newStartDate.plusWeeks(4);
 
         // CRITICAL: Deactivate all existing cycles before creating new one
@@ -210,7 +213,7 @@ public class WorkoutCycleService {
     /**
      * Determine which lift is scheduled for a given day of the week
      */
-    private LiftType getLiftForDay(WorkoutSchedule schedule, java.time.DayOfWeek dayOfWeek) {
+    private LiftType getLiftForDay(WorkoutSchedule schedule, DayOfWeek dayOfWeek) {
         if (schedule.getBenchDay() == dayOfWeek) return LiftType.BENCH;
         if (schedule.getSquatDay() == dayOfWeek) return LiftType.SQUAT;
         if (schedule.getDeadliftDay() == dayOfWeek) return LiftType.DEADLIFT;
@@ -239,23 +242,23 @@ public class WorkoutCycleService {
     /**
      * Calculate the 3 sets for a given training max and week number
      */
-    private List<Map<String, Object>> calculateSets(double trainingMax, int weekNumber) {
+    private List<PrescribedSetDTO> calculateSets(double trainingMax, int weekNumber) {
         int weekIndex = weekNumber - 1;  // Convert to 0-based index
         double[] percentages = WEEK_PERCENTAGES[weekIndex];
         int[] reps = WEEK_REPS[weekIndex];
 
-        List<Map<String, Object>> sets = new java.util.ArrayList<>();
+        var sets = new java.util.ArrayList<PrescribedSetDTO>();
 
         for (int i = 0; i < 3; i++) {
-            double weight = roundToNearest2_5(trainingMax * percentages[i]);
+            double weight = roundToNearest5(trainingMax * percentages[i]);
             int repCount = reps[i];
             boolean isAmrap = (weekNumber != 4 && i == 2);  // Last set is AMRAP except on deload week
 
-            Map<String, Object> set = new HashMap<>();
-            set.put("setNumber", i + 1);
-            set.put("weight", weight);
-            set.put("reps", repCount);
-            set.put("isAmrap", isAmrap);  // "As Many Reps As Possible"
+            var set = new PrescribedSetDTO();
+            set.setSetNumber(i + 1);
+            set.setWeight(weight);
+            set.setReps(repCount);
+            set.setIsAmrap(isAmrap);  // "As Many Reps As Possible"
 
             sets.add(set);
         }
@@ -264,9 +267,9 @@ public class WorkoutCycleService {
     }
 
     /**
-     * Round weight to nearest 2.5 lbs
+     * Round weight to nearest 5 lbs
      */
-    private double roundToNearest2_5(double weight) {
-        return Math.round(weight / 2.5) * 2.5;
+    private double roundToNearest5(double weight) {
+        return Math.round(weight / 5) * 5;
     }
 }
