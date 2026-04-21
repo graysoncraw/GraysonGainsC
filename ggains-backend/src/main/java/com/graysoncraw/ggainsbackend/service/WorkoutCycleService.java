@@ -1,8 +1,13 @@
 package com.graysoncraw.ggainsbackend.service;
 
+import com.graysoncraw.ggainsbackend.dto.CycleProgressRequestDTO;
 import com.graysoncraw.ggainsbackend.dto.PrescribedSetDTO;
 import com.graysoncraw.ggainsbackend.dto.PrescribedWorkoutDTO;
-import com.graysoncraw.ggainsbackend.model.*;
+import com.graysoncraw.ggainsbackend.model.LiftType;
+import com.graysoncraw.ggainsbackend.model.PersonalRecord;
+import com.graysoncraw.ggainsbackend.model.User;
+import com.graysoncraw.ggainsbackend.model.WorkoutCycle;
+import com.graysoncraw.ggainsbackend.model.WorkoutSchedule;
 import com.graysoncraw.ggainsbackend.repository.PersonalRecordRepository;
 import com.graysoncraw.ggainsbackend.repository.UserRepository;
 import com.graysoncraw.ggainsbackend.repository.WorkoutCycleRepository;
@@ -14,7 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +33,6 @@ public class WorkoutCycleService {
     private final WorkoutScheduleRepository workoutScheduleRepository;
     private final UserRepository userRepository;
 
-    // 5-3-1 percentages and reps for each week
     private static final double[][] WEEK_PERCENTAGES = {
             {0.65, 0.75, 0.85},  // Week 1
             {0.70, 0.80, 0.90},  // Week 2
@@ -41,40 +47,30 @@ public class WorkoutCycleService {
             {5, 5, 5}   // Week 4 Deload (no + sets)
     };
 
-    /**
-     * Create the first workout cycle for a user
-     */
     public WorkoutCycle createFirstCycle(String firebaseUid) {
         if (!workoutCycleRepository.findByUser_FirebaseUid(firebaseUid).isEmpty()) {
             throw new IllegalStateException("First cycle already exists for user");
         }
 
-        // Verify user exists
         User user = userRepository.findById(firebaseUid)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        // Get user's PRs
         PersonalRecord pr = personalRecordRepository.findByUser_FirebaseUid(firebaseUid)
                 .orElseThrow(() -> new IllegalArgumentException("Personal records not found for user"));
 
-        // Get user's workout schedule for start date
         WorkoutSchedule schedule = workoutScheduleRepository.findByUser_FirebaseUid(firebaseUid)
                 .orElseThrow(() -> new IllegalArgumentException("Workout schedule not found for user"));
 
-        // Calculate training maxes (90% of PRs)
         double benchTM = roundToNearest5(pr.getBenchPressPR() * 0.90);
         double squatTM = roundToNearest5(pr.getSquatPR() * 0.90);
         double deadliftTM = roundToNearest5(pr.getDeadliftPR() * 0.90);
         double shoulderPressTM = roundToNearest5(pr.getShoulderPressPR() * 0.90);
 
-        // Calculate end date (4 weeks from start)
         LocalDate startDate = schedule.getCycleStartDate();
         LocalDate endDate = startDate.plusWeeks(4);
 
-        // Deactivate any existing active cycles (shouldn't exist for first cycle, but safety check)
         deactivateAllCycles(firebaseUid);
 
-        // Create the cycle
         WorkoutCycle cycle = WorkoutCycle.builder()
                 .user(user)
                 .cycleNumber(1)
@@ -90,40 +86,29 @@ public class WorkoutCycleService {
         return workoutCycleRepository.save(cycle);
     }
 
-    /**
-     * Get the active workout cycle for a user
-     */
     public WorkoutCycle getActiveCycle(String firebaseUid) {
         return workoutCycleRepository.findByUser_FirebaseUidAndIsActiveTrue(firebaseUid)
                 .orElseThrow(() -> new IllegalStateException("No active workout cycle found for user"));
     }
 
-    /**
-     * Calculate the prescribed workout for a given date
-     */
     public PrescribedWorkoutDTO calculatePrescribedWorkout(String firebaseUid, LocalDate date) {
-        // Get active cycle
         WorkoutCycle cycle = getActiveCycle(firebaseUid);
 
-        // Get workout schedule
         WorkoutSchedule schedule = workoutScheduleRepository.findByUser_FirebaseUid(firebaseUid)
                 .orElseThrow(() -> new IllegalArgumentException("Workout schedule not found"));
 
-        // Determine which week we're in (1-4)
         int weekNumber = calculateWeekNumber(cycle.getStartDate(), date);
 
         if (weekNumber > 4) {
             throw new IllegalStateException("Current cycle has expired. Please progress to the next cycle.");
         }
 
-        // Determine which lift is scheduled for this day
         LiftType todaysLift = getLiftForDay(schedule, date.getDayOfWeek());
 
         if (todaysLift == null) {
             throw new IllegalArgumentException("No lift scheduled for " + date.getDayOfWeek());
         }
 
-        // Get the training max for this lift
         double trainingMax = getTrainingMaxForLift(cycle, todaysLift);
 
         // Calculate the prescribed sets
@@ -138,14 +123,9 @@ public class WorkoutCycleService {
         return workout;
     }
 
-    /**
-     * Progress to the next workout cycle
-     */
-    public WorkoutCycle progressToNextCycle(String firebaseUid) {
-        // Get current active cycle
+    public WorkoutCycle progressToNextCycle(String firebaseUid, CycleProgressRequestDTO request) {
         WorkoutCycle currentCycle = getActiveCycle(firebaseUid);
 
-        // Verify user exists
         User user = userRepository.findById(firebaseUid)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
@@ -157,14 +137,33 @@ public class WorkoutCycleService {
         double newDeadliftTM = roundToNearest5(currentCycle.getDeadliftTrainingMax() + 10);
         double newShoulderPressTM = roundToNearest5(currentCycle.getShoulderPressTrainingMax() + 5);
 
-        // New cycle starts today
+        double newBenchTM = progressedTrainingMax(
+                currentCycle.getBenchTrainingMax(),
+                5,
+                outcomes.get(LiftType.BENCH)
+        );
+        double newSquatTM = progressedTrainingMax(
+                currentCycle.getSquatTrainingMax(),
+                10,
+                outcomes.get(LiftType.SQUAT)
+        );
+        double newDeadliftTM = progressedTrainingMax(
+                currentCycle.getDeadliftTrainingMax(),
+                10,
+                outcomes.get(LiftType.DEADLIFT)
+        );
+        double newShoulderPressTM = progressedTrainingMax(
+                currentCycle.getShoulderPressTrainingMax(),
+                5,
+                outcomes.get(LiftType.SHOULDER_PRESS)
+        );
+
         LocalDate newStartDate = currentCycle.getEndDate().plusDays(1);
         LocalDate newEndDate = newStartDate.plusWeeks(4);
 
         // CRITICAL: Deactivate all existing cycles before creating new one
         deactivateAllCycles(firebaseUid);
 
-        // Create new cycle
         WorkoutCycle newCycle = WorkoutCycle.builder()
                 .user(user)
                 .cycleNumber(currentCycle.getCycleNumber() + 1)
@@ -180,18 +179,12 @@ public class WorkoutCycleService {
         return workoutCycleRepository.save(newCycle);
     }
 
-    /**
-     * Get all workout cycles for a user, ordered by cycle number (most recent first)
-     */
     public List<WorkoutCycle> getCycleHistory(String firebaseUid) {
         return workoutCycleRepository.findByUser_FirebaseUidOrderByCycleNumberDesc(firebaseUid);
     }
 
     // ==================== Helper Methods ====================
 
-    /**
-     * Deactivate all cycles for a user
-     */
     private void deactivateAllCycles(String firebaseUid) {
         List<WorkoutCycle> activeCycles = workoutCycleRepository.findByUser_FirebaseUid(firebaseUid);
         for (WorkoutCycle cycle : activeCycles) {
@@ -202,17 +195,11 @@ public class WorkoutCycleService {
         }
     }
 
-    /**
-     * Calculate which week (1-4) we're in based on start date and current date
-     */
     private int calculateWeekNumber(LocalDate startDate, LocalDate currentDate) {
         long daysBetween = ChronoUnit.DAYS.between(startDate, currentDate);
         return (int) (daysBetween / 7) + 1;
     }
 
-    /**
-     * Determine which lift is scheduled for a given day of the week
-     */
     private LiftType getLiftForDay(WorkoutSchedule schedule, DayOfWeek dayOfWeek) {
         if (schedule.getBenchDay() == dayOfWeek) return LiftType.BENCH;
         if (schedule.getSquatDay() == dayOfWeek) return LiftType.SQUAT;
@@ -221,9 +208,6 @@ public class WorkoutCycleService {
         return null;
     }
 
-    /**
-     * Get the training max for a specific lift from the cycle
-     */
     private double getTrainingMaxForLift(WorkoutCycle cycle, LiftType liftType) {
         switch (liftType) {
             case BENCH:
@@ -239,26 +223,23 @@ public class WorkoutCycleService {
         }
     }
 
-    /**
-     * Calculate the 3 sets for a given training max and week number
-     */
     private List<PrescribedSetDTO> calculateSets(double trainingMax, int weekNumber) {
-        int weekIndex = weekNumber - 1;  // Convert to 0-based index
+        int weekIndex = weekNumber - 1;
         double[] percentages = WEEK_PERCENTAGES[weekIndex];
         int[] reps = WEEK_REPS[weekIndex];
 
-        var sets = new java.util.ArrayList<PrescribedSetDTO>();
+        List<PrescribedSetDTO> sets = new java.util.ArrayList<>();
 
         for (int i = 0; i < 3; i++) {
             double weight = roundToNearest5(trainingMax * percentages[i]);
             int repCount = reps[i];
-            boolean isAmrap = (weekNumber != 4 && i == 2);  // Last set is AMRAP except on deload week
+            boolean isAmrap = (weekNumber != 4 && i == 2);
 
-            var set = new PrescribedSetDTO();
+            PrescribedSetDTO set = new PrescribedSetDTO();
             set.setSetNumber(i + 1);
             set.setWeight(weight);
             set.setReps(repCount);
-            set.setIsAmrap(isAmrap);  // "As Many Reps As Possible"
+            set.setIsAmrap(isAmrap);
 
             sets.add(set);
         }
@@ -266,10 +247,31 @@ public class WorkoutCycleService {
         return sets;
     }
 
-    /**
-     * Round weight to nearest 5 lbs
-     */
     private double roundToNearest5(double weight) {
         return Math.round(weight / 5) * 5;
+    }
+
+    private Map<LiftType, Boolean> validateAndExtractOutcomes(CycleProgressRequestDTO request) {
+        if (request == null || request.getLiftOutcomes() == null) {
+            throw new IllegalArgumentException("liftOutcomes is required");
+        }
+
+        Map<LiftType, Boolean> outcomes = request.getLiftOutcomes();
+        for (LiftType liftType : EnumSet.allOf(LiftType.class)) {
+            if (!outcomes.containsKey(liftType)) {
+                throw new IllegalArgumentException("Missing lift outcome for " + liftType);
+            }
+            if (outcomes.get(liftType) == null) {
+                throw new IllegalArgumentException("Lift outcome cannot be null for " + liftType);
+            }
+        }
+        return outcomes;
+    }
+
+    private double progressedTrainingMax(double currentTrainingMax, double increment, boolean successfulThisCycle) {
+        double nextTrainingMax = successfulThisCycle
+                ? currentTrainingMax + increment
+                : currentTrainingMax;
+        return roundToNearest5(nextTrainingMax);
     }
 }

@@ -1,14 +1,17 @@
 package com.graysoncraw.ggainsbackend.controller;
 
+import com.graysoncraw.ggainsbackend.dto.CycleProgressRequestDTO;
 import com.graysoncraw.ggainsbackend.dto.PrescribedWorkoutDTO;
 import com.graysoncraw.ggainsbackend.dto.WorkoutCycleResponseDTO;
 import com.graysoncraw.ggainsbackend.model.WorkoutCycle;
 import com.graysoncraw.ggainsbackend.service.WorkoutCycleService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,8 +48,11 @@ public class WorkoutCycleController {
     }
 
     @PostMapping("/progress")
-    public WorkoutCycleResponseDTO progressToNextCycle(@PathVariable String firebaseUid) {
-        WorkoutCycle cycle = workoutCycleService.progressToNextCycle(firebaseUid);
+    public WorkoutCycleResponseDTO progressToNextCycle(
+            @PathVariable String firebaseUid,
+            @Valid @RequestBody CycleProgressRequestDTO request
+    ) {
+        WorkoutCycle cycle = workoutCycleService.progressToNextCycle(firebaseUid, request);
         return toResponse(cycle);
     }
 
