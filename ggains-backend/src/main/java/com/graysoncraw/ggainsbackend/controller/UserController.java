@@ -1,6 +1,7 @@
 package com.graysoncraw.ggainsbackend.controller;
 
-import com.graysoncraw.ggainsbackend.dto.CreateUserRequestDTO;
+import com.graysoncraw.ggainsbackend.dto.UserRequestDTO;
+import com.graysoncraw.ggainsbackend.dto.UserResponseDTO;
 import com.graysoncraw.ggainsbackend.model.User;
 import com.graysoncraw.ggainsbackend.service.UserService;
 import jakarta.validation.Valid;
@@ -27,7 +28,7 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public ResponseEntity<User> createUser(@Valid @RequestBody CreateUserRequestDTO request) {
+    public ResponseEntity<UserResponseDTO> createUser(@Valid @RequestBody UserRequestDTO request) {
         User createdUser = userService.createUser(User.builder()
                 .firebaseUid(request.getFirebaseUid())
                 .firstName(request.getFirstName())
@@ -39,24 +40,26 @@ public class UserController {
                 .weight(request.getWeight())
                 .build());
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toUserResponse(createdUser));
     }
 
     @GetMapping("/{firebaseUid}")
-    public User getUserByFirebaseUid(@PathVariable String firebaseUid) {
-        return userService.getUserByFirebaseUid(firebaseUid)
+    public UserResponseDTO getUserByFirebaseUid(@PathVariable String firebaseUid) {
+        User user = userService.getUserByFirebaseUid(firebaseUid)
                 .orElseThrow(() -> new NoSuchElementException("User not found for firebaseUid: " + firebaseUid));
+        return toUserResponse(user);
     }
 
     // ?email=...
     @GetMapping(params = "email")
-    public User getUserByEmail(@RequestParam String email) {
-        return userService.getUserByEmail(email)
+    public UserResponseDTO getUserByEmail(@RequestParam String email) {
+        User user = userService.getUserByEmail(email)
                 .orElseThrow(() -> new NoSuchElementException("User not found for email: " + email));
+        return toUserResponse(user);
     }
 
     @PutMapping(value = "/{firebaseUid}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public User updateUser(@PathVariable String firebaseUid, @Valid @RequestBody CreateUserRequestDTO request) {
+    public UserResponseDTO updateUser(@PathVariable String firebaseUid, @Valid @RequestBody UserRequestDTO request) {
         User userToUpdate = User.builder()
                 .firebaseUid(firebaseUid)
                 .firstName(request.getFirstName())
@@ -68,12 +71,27 @@ public class UserController {
                 .weight(request.getWeight())
                 .build();
 
-        return userService.updateUser(userToUpdate);
+        User updatedUser = userService.updateUser(userToUpdate);
+        return toUserResponse(updatedUser);
     }
 
     @DeleteMapping("/{firebaseUid}")
     public ResponseEntity<Void> deleteUser(@PathVariable String firebaseUid) {
         userService.deleteUser(firebaseUid);
         return ResponseEntity.noContent().build();
+    }
+
+    private UserResponseDTO toUserResponse(User user) {
+        UserResponseDTO response = new UserResponseDTO();
+        response.setFirebaseUid(user.getFirebaseUid());
+        response.setFirstName(user.getFirstName());
+        response.setLastName(user.getLastName());
+        response.setEmail(user.getEmail());
+        response.setDateCreated(user.getDateCreated());
+        response.setGender(user.getGender());
+        response.setHeightFt(user.getHeightFt());
+        response.setHeightIn(user.getHeightIn());
+        response.setWeight(user.getWeight());
+        return response;
     }
 }

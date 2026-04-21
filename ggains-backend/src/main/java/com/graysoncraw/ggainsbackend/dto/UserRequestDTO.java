@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class CreateUserRequestDTO {
+public class UserRequestDTO {
 
     @NotBlank(message = "Firebase UID is required")
     private String firebaseUid;
