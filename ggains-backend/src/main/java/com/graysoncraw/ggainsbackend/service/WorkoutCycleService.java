@@ -94,6 +94,13 @@ public class WorkoutCycleService {
     public PrescribedWorkoutDTO calculatePrescribedWorkout(String firebaseUid, LocalDate date) {
         WorkoutCycle cycle = getActiveCycle(firebaseUid);
 
+        if (date.isBefore(cycle.getStartDate())) {
+            throw new IllegalArgumentException("Date is before cycle start date");
+        }
+        if (date.isAfter(cycle.getEndDate())) {
+            throw new IllegalStateException("Current cycle has expired. Please progress to the next cycle.");
+        }
+
         WorkoutSchedule schedule = workoutScheduleRepository.findByUser_FirebaseUid(firebaseUid)
                 .orElseThrow(() -> new IllegalArgumentException("Workout schedule not found"));
 
@@ -129,13 +136,7 @@ public class WorkoutCycleService {
         User user = userRepository.findById(firebaseUid)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        // Calculate new training maxes with progression
-        // Upper body (bench, shoulder press): +5 lbs
-        // Lower body (squat, deadlift): +10 lbs
-        double newBenchTM = roundToNearest5(currentCycle.getBenchTrainingMax() + 5);
-        double newSquatTM = roundToNearest5(currentCycle.getSquatTrainingMax() + 10);
-        double newDeadliftTM = roundToNearest5(currentCycle.getDeadliftTrainingMax() + 10);
-        double newShoulderPressTM = roundToNearest5(currentCycle.getShoulderPressTrainingMax() + 5);
+        Map<LiftType, Boolean> outcomes = validateAndExtractOutcomes(request);
 
         double newBenchTM = progressedTrainingMax(
                 currentCycle.getBenchTrainingMax(),
