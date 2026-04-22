@@ -3,6 +3,7 @@ package com.graysoncraw.ggainsbackend.controller;
 import com.graysoncraw.ggainsbackend.dto.CycleProgressRequestDTO;
 import com.graysoncraw.ggainsbackend.dto.PrescribedWorkoutDTO;
 import com.graysoncraw.ggainsbackend.dto.WorkoutCycleResponseDTO;
+import com.graysoncraw.ggainsbackend.mapper.WorkoutCycleMapper;
 import com.graysoncraw.ggainsbackend.model.WorkoutCycle;
 import com.graysoncraw.ggainsbackend.service.WorkoutCycleService;
 import jakarta.validation.Valid;
@@ -25,17 +26,18 @@ import java.util.List;
 public class WorkoutCycleController {
 
     private final WorkoutCycleService workoutCycleService;
+    private final WorkoutCycleMapper workoutCycleMapper;
 
     @GetMapping("/active")
     public WorkoutCycleResponseDTO getActiveCycle(@PathVariable String firebaseUid) {
         WorkoutCycle cycle = workoutCycleService.getActiveCycle(firebaseUid);
-        return toResponse(cycle);
+        return workoutCycleMapper.toResponse(cycle);
     }
 
     @GetMapping("/history")
     public List<WorkoutCycleResponseDTO> getCycleHistory(@PathVariable String firebaseUid) {
         return workoutCycleService.getCycleHistory(firebaseUid).stream()
-                .map(this::toResponse)
+                .map(workoutCycleMapper::toResponse)
                 .toList();
     }
 
@@ -53,21 +55,6 @@ public class WorkoutCycleController {
             @Valid @RequestBody CycleProgressRequestDTO request
     ) {
         WorkoutCycle cycle = workoutCycleService.progressToNextCycle(firebaseUid, request);
-        return toResponse(cycle);
-    }
-
-    private WorkoutCycleResponseDTO toResponse(WorkoutCycle cycle) {
-        WorkoutCycleResponseDTO response = new WorkoutCycleResponseDTO();
-        response.setId(cycle.getId());
-        response.setFirebaseUid(cycle.getUser().getFirebaseUid());
-        response.setCycleNumber(cycle.getCycleNumber());
-        response.setStartDate(cycle.getStartDate());
-        response.setEndDate(cycle.getEndDate());
-        response.setBenchTrainingMax(cycle.getBenchTrainingMax());
-        response.setSquatTrainingMax(cycle.getSquatTrainingMax());
-        response.setDeadliftTrainingMax(cycle.getDeadliftTrainingMax());
-        response.setShoulderPressTrainingMax(cycle.getShoulderPressTrainingMax());
-        response.setIsActive(cycle.getIsActive());
-        return response;
+        return workoutCycleMapper.toResponse(cycle);
     }
 }

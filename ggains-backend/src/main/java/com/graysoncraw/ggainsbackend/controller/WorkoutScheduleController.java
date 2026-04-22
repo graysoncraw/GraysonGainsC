@@ -2,6 +2,7 @@ package com.graysoncraw.ggainsbackend.controller;
 
 import com.graysoncraw.ggainsbackend.dto.WorkoutScheduleRequestDTO;
 import com.graysoncraw.ggainsbackend.dto.WorkoutScheduleResponseDTO;
+import com.graysoncraw.ggainsbackend.mapper.WorkoutScheduleMapper;
 import com.graysoncraw.ggainsbackend.model.WorkoutSchedule;
 import com.graysoncraw.ggainsbackend.service.WorkoutScheduleService;
 import jakarta.validation.Valid;
@@ -24,29 +25,24 @@ import java.util.NoSuchElementException;
 public class WorkoutScheduleController {
 
     private final WorkoutScheduleService workoutScheduleService;
+    private final WorkoutScheduleMapper workoutScheduleMapper;
 
     @PostMapping
     public ResponseEntity<WorkoutScheduleResponseDTO> createWorkoutSchedule(
             @PathVariable String firebaseUid,
             @Valid @RequestBody WorkoutScheduleRequestDTO request
     ) {
-        WorkoutSchedule workoutSchedule = WorkoutSchedule.builder()
-                .cycleStartDate(request.getCycleStartDate())
-                .benchDay(request.getBenchDay())
-                .squatDay(request.getSquatDay())
-                .deadliftDay(request.getDeadliftDay())
-                .shoulderPressDay(request.getShoulderPressDay())
-                .build();
+        WorkoutSchedule workoutSchedule = workoutScheduleMapper.toEntity(request);
 
         WorkoutSchedule createdSchedule = workoutScheduleService.createWorkoutSchedule(firebaseUid, workoutSchedule);
-        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(createdSchedule));
+        return ResponseEntity.status(HttpStatus.CREATED).body(workoutScheduleMapper.toResponse(createdSchedule));
     }
 
     @GetMapping
     public WorkoutScheduleResponseDTO getWorkoutSchedule(@PathVariable String firebaseUid) {
         WorkoutSchedule schedule = workoutScheduleService.getWorkoutScheduleByUser(firebaseUid)
                 .orElseThrow(() -> new NoSuchElementException("Workout schedule not found for user " + firebaseUid));
-        return toResponse(schedule);
+        return workoutScheduleMapper.toResponse(schedule);
     }
 
     @PutMapping
@@ -57,29 +53,11 @@ public class WorkoutScheduleController {
         WorkoutSchedule existingSchedule = workoutScheduleService.getWorkoutScheduleByUser(firebaseUid)
                 .orElseThrow(() -> new NoSuchElementException("Workout schedule not found for user " + firebaseUid));
 
-        WorkoutSchedule scheduleToUpdate = WorkoutSchedule.builder()
-                .id(existingSchedule.getId())
-                .user(existingSchedule.getUser())
-                .cycleStartDate(request.getCycleStartDate())
-                .benchDay(request.getBenchDay())
-                .squatDay(request.getSquatDay())
-                .deadliftDay(request.getDeadliftDay())
-                .shoulderPressDay(request.getShoulderPressDay())
-                .build();
+        WorkoutSchedule scheduleToUpdate = workoutScheduleMapper.toEntity(request);
+        scheduleToUpdate.setId(existingSchedule.getId());
+        scheduleToUpdate.setUser(existingSchedule.getUser());
 
         WorkoutSchedule updatedSchedule = workoutScheduleService.updateWorkoutSchedule(scheduleToUpdate);
-        return toResponse(updatedSchedule);
-    }
-
-    private WorkoutScheduleResponseDTO toResponse(WorkoutSchedule schedule) {
-        WorkoutScheduleResponseDTO response = new WorkoutScheduleResponseDTO();
-        response.setId(schedule.getId());
-        response.setFirebaseUid(schedule.getUser().getFirebaseUid());
-        response.setCycleStartDate(schedule.getCycleStartDate());
-        response.setBenchDay(schedule.getBenchDay());
-        response.setSquatDay(schedule.getSquatDay());
-        response.setDeadliftDay(schedule.getDeadliftDay());
-        response.setShoulderPressDay(schedule.getShoulderPressDay());
-        return response;
+        return workoutScheduleMapper.toResponse(updatedSchedule);
     }
 }

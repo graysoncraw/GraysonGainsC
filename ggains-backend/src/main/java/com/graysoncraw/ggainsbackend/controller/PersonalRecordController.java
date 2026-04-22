@@ -2,6 +2,7 @@ package com.graysoncraw.ggainsbackend.controller;
 
 import com.graysoncraw.ggainsbackend.dto.PersonalRecordRequestDTO;
 import com.graysoncraw.ggainsbackend.dto.PersonalRecordResponseDTO;
+import com.graysoncraw.ggainsbackend.mapper.PersonalRecordMapper;
 import com.graysoncraw.ggainsbackend.model.PersonalRecord;
 import com.graysoncraw.ggainsbackend.service.PersonalRecordService;
 import jakarta.validation.Valid;
@@ -24,27 +25,23 @@ import org.springframework.web.bind.annotation.RestController;
 public class PersonalRecordController {
 
     private final PersonalRecordService personalRecordService;
+    private final PersonalRecordMapper personalRecordMapper;
 
     @PostMapping
     public ResponseEntity<PersonalRecordResponseDTO> createPersonalRecord(
             @PathVariable String firebaseUid,
             @Valid @RequestBody PersonalRecordRequestDTO request
     ) {
-        PersonalRecord personalRecord = PersonalRecord.builder()
-                .benchPressPR(request.getBenchPressPR())
-                .squatPR(request.getSquatPR())
-                .deadliftPR(request.getDeadliftPR())
-                .shoulderPressPR(request.getShoulderPressPR())
-                .build();
+        PersonalRecord personalRecord = personalRecordMapper.toEntity(request);
 
         PersonalRecord createdRecord = personalRecordService.createPersonalRecord(firebaseUid, personalRecord);
-        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(createdRecord));
+        return ResponseEntity.status(HttpStatus.CREATED).body(personalRecordMapper.toResponse(createdRecord));
     }
 
     @GetMapping
     public PersonalRecordResponseDTO getPersonalRecord(@PathVariable String firebaseUid) {
         PersonalRecord record = personalRecordService.getPersonalRecordByUserFirebaseUid(firebaseUid);
-        return toResponse(record);
+        return personalRecordMapper.toResponse(record);
     }
 
     @PutMapping
@@ -53,17 +50,12 @@ public class PersonalRecordController {
             @Valid @RequestBody PersonalRecordRequestDTO request
     ) {
         PersonalRecord existingRecord = personalRecordService.getPersonalRecordByUserFirebaseUid(firebaseUid);
-        PersonalRecord personalRecord = PersonalRecord.builder()
-                .id(existingRecord.getId())
-                .user(existingRecord.getUser())
-                .benchPressPR(request.getBenchPressPR())
-                .squatPR(request.getSquatPR())
-                .deadliftPR(request.getDeadliftPR())
-                .shoulderPressPR(request.getShoulderPressPR())
-                .build();
+        PersonalRecord personalRecord = personalRecordMapper.toEntity(request);
+        personalRecord.setId(existingRecord.getId());
+        personalRecord.setUser(existingRecord.getUser());
 
         PersonalRecord updatedRecord = personalRecordService.updatePersonalRecord(personalRecord);
-        return toResponse(updatedRecord);
+        return personalRecordMapper.toResponse(updatedRecord);
     }
 
     @PatchMapping("/{liftType}")
@@ -73,17 +65,6 @@ public class PersonalRecordController {
             @RequestParam Double newPR
     ) {
         PersonalRecord updatedRecord = personalRecordService.updateSpecificPR(firebaseUid, liftType, newPR);
-        return toResponse(updatedRecord);
-    }
-
-    private PersonalRecordResponseDTO toResponse(PersonalRecord record) {
-        PersonalRecordResponseDTO response = new PersonalRecordResponseDTO();
-        response.setId(record.getId());
-        response.setFirebaseUid(record.getUser().getFirebaseUid());
-        response.setBenchPressPR(record.getBenchPressPR());
-        response.setSquatPR(record.getSquatPR());
-        response.setDeadliftPR(record.getDeadliftPR());
-        response.setShoulderPressPR(record.getShoulderPressPR());
-        return response;
+        return personalRecordMapper.toResponse(updatedRecord);
     }
 }
