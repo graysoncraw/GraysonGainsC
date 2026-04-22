@@ -9,9 +9,6 @@ import lombok.Data;
 @Data
 public class UserRequestDTO {
 
-    @NotBlank(message = "Firebase UID is required")
-    private String firebaseUid;
-
     @NotBlank(message = "First name is required")
     private String firstName;
 

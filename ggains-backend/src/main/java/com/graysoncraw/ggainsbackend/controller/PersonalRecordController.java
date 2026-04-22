@@ -4,6 +4,7 @@ import com.graysoncraw.ggainsbackend.dto.PersonalRecordRequestDTO;
 import com.graysoncraw.ggainsbackend.dto.PersonalRecordResponseDTO;
 import com.graysoncraw.ggainsbackend.mapper.PersonalRecordMapper;
 import com.graysoncraw.ggainsbackend.model.PersonalRecord;
+import com.graysoncraw.ggainsbackend.security.AuthenticatedUserGuard;
 import com.graysoncraw.ggainsbackend.service.PersonalRecordService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,12 +27,14 @@ public class PersonalRecordController {
 
     private final PersonalRecordService personalRecordService;
     private final PersonalRecordMapper personalRecordMapper;
+    private final AuthenticatedUserGuard authenticatedUserGuard;
 
     @PostMapping
     public ResponseEntity<PersonalRecordResponseDTO> createPersonalRecord(
             @PathVariable String firebaseUid,
             @Valid @RequestBody PersonalRecordRequestDTO request
     ) {
+        authenticatedUserGuard.requireUidMatches(firebaseUid);
         PersonalRecord personalRecord = personalRecordMapper.toEntity(request);
 
         PersonalRecord createdRecord = personalRecordService.createPersonalRecord(firebaseUid, personalRecord);
@@ -40,6 +43,7 @@ public class PersonalRecordController {
 
     @GetMapping
     public PersonalRecordResponseDTO getPersonalRecord(@PathVariable String firebaseUid) {
+        authenticatedUserGuard.requireUidMatches(firebaseUid);
         PersonalRecord record = personalRecordService.getPersonalRecordByUserFirebaseUid(firebaseUid);
         return personalRecordMapper.toResponse(record);
     }
@@ -49,6 +53,7 @@ public class PersonalRecordController {
             @PathVariable String firebaseUid,
             @Valid @RequestBody PersonalRecordRequestDTO request
     ) {
+        authenticatedUserGuard.requireUidMatches(firebaseUid);
         PersonalRecord existingRecord = personalRecordService.getPersonalRecordByUserFirebaseUid(firebaseUid);
         PersonalRecord personalRecord = personalRecordMapper.toEntity(request);
         personalRecord.setId(existingRecord.getId());
@@ -64,6 +69,7 @@ public class PersonalRecordController {
             @PathVariable String liftType,
             @RequestParam Double newPR
     ) {
+        authenticatedUserGuard.requireUidMatches(firebaseUid);
         PersonalRecord updatedRecord = personalRecordService.updateSpecificPR(firebaseUid, liftType, newPR);
         return personalRecordMapper.toResponse(updatedRecord);
     }

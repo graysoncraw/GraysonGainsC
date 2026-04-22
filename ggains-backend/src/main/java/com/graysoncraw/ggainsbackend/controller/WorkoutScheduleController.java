@@ -4,6 +4,7 @@ import com.graysoncraw.ggainsbackend.dto.WorkoutScheduleRequestDTO;
 import com.graysoncraw.ggainsbackend.dto.WorkoutScheduleResponseDTO;
 import com.graysoncraw.ggainsbackend.mapper.WorkoutScheduleMapper;
 import com.graysoncraw.ggainsbackend.model.WorkoutSchedule;
+import com.graysoncraw.ggainsbackend.security.AuthenticatedUserGuard;
 import com.graysoncraw.ggainsbackend.service.WorkoutScheduleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,12 +27,14 @@ public class WorkoutScheduleController {
 
     private final WorkoutScheduleService workoutScheduleService;
     private final WorkoutScheduleMapper workoutScheduleMapper;
+    private final AuthenticatedUserGuard authenticatedUserGuard;
 
     @PostMapping
     public ResponseEntity<WorkoutScheduleResponseDTO> createWorkoutSchedule(
             @PathVariable String firebaseUid,
             @Valid @RequestBody WorkoutScheduleRequestDTO request
     ) {
+        authenticatedUserGuard.requireUidMatches(firebaseUid);
         WorkoutSchedule workoutSchedule = workoutScheduleMapper.toEntity(request);
 
         WorkoutSchedule createdSchedule = workoutScheduleService.createWorkoutSchedule(firebaseUid, workoutSchedule);
@@ -40,6 +43,7 @@ public class WorkoutScheduleController {
 
     @GetMapping
     public WorkoutScheduleResponseDTO getWorkoutSchedule(@PathVariable String firebaseUid) {
+        authenticatedUserGuard.requireUidMatches(firebaseUid);
         WorkoutSchedule schedule = workoutScheduleService.getWorkoutScheduleByUser(firebaseUid)
                 .orElseThrow(() -> new NoSuchElementException("Workout schedule not found for user " + firebaseUid));
         return workoutScheduleMapper.toResponse(schedule);
@@ -50,6 +54,7 @@ public class WorkoutScheduleController {
             @PathVariable String firebaseUid,
             @Valid @RequestBody WorkoutScheduleRequestDTO request
     ) {
+        authenticatedUserGuard.requireUidMatches(firebaseUid);
         WorkoutSchedule existingSchedule = workoutScheduleService.getWorkoutScheduleByUser(firebaseUid)
                 .orElseThrow(() -> new NoSuchElementException("Workout schedule not found for user " + firebaseUid));
 

@@ -5,6 +5,7 @@ import com.graysoncraw.ggainsbackend.dto.PrescribedWorkoutDTO;
 import com.graysoncraw.ggainsbackend.dto.WorkoutCycleResponseDTO;
 import com.graysoncraw.ggainsbackend.mapper.WorkoutCycleMapper;
 import com.graysoncraw.ggainsbackend.model.WorkoutCycle;
+import com.graysoncraw.ggainsbackend.security.AuthenticatedUserGuard;
 import com.graysoncraw.ggainsbackend.service.WorkoutCycleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,15 +28,18 @@ public class WorkoutCycleController {
 
     private final WorkoutCycleService workoutCycleService;
     private final WorkoutCycleMapper workoutCycleMapper;
+    private final AuthenticatedUserGuard authenticatedUserGuard;
 
     @GetMapping("/active")
     public WorkoutCycleResponseDTO getActiveCycle(@PathVariable String firebaseUid) {
+        authenticatedUserGuard.requireUidMatches(firebaseUid);
         WorkoutCycle cycle = workoutCycleService.getActiveCycle(firebaseUid);
         return workoutCycleMapper.toResponse(cycle);
     }
 
     @GetMapping("/history")
     public List<WorkoutCycleResponseDTO> getCycleHistory(@PathVariable String firebaseUid) {
+        authenticatedUserGuard.requireUidMatches(firebaseUid);
         return workoutCycleService.getCycleHistory(firebaseUid).stream()
                 .map(workoutCycleMapper::toResponse)
                 .toList();
@@ -46,6 +50,7 @@ public class WorkoutCycleController {
             @PathVariable String firebaseUid,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
+        authenticatedUserGuard.requireUidMatches(firebaseUid);
         return workoutCycleService.calculatePrescribedWorkout(firebaseUid, date);
     }
 
@@ -54,6 +59,7 @@ public class WorkoutCycleController {
             @PathVariable String firebaseUid,
             @Valid @RequestBody CycleProgressRequestDTO request
     ) {
+        authenticatedUserGuard.requireUidMatches(firebaseUid);
         WorkoutCycle cycle = workoutCycleService.progressToNextCycle(firebaseUid, request);
         return workoutCycleMapper.toResponse(cycle);
     }

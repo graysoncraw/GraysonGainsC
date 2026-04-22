@@ -10,6 +10,7 @@ import org.mapstruct.Mappings;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
     @Mappings({
+            @Mapping(target = "firebaseUid", ignore = true),
             @Mapping(target = "dateCreated", ignore = true),
             @Mapping(target = "personalRecord", ignore = true),
             @Mapping(target = "workoutSchedule", ignore = true),
