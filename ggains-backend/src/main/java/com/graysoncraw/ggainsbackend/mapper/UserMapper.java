@@ -1,7 +1,7 @@
 package com.graysoncraw.ggainsbackend.mapper;
 
-import com.graysoncraw.ggainsbackend.dto.UserRequestDTO;
-import com.graysoncraw.ggainsbackend.dto.UserResponseDTO;
+import com.graysoncraw.ggainsbackend.dto.user.UserRequestDTO;
+import com.graysoncraw.ggainsbackend.dto.user.UserResponseDTO;
 import com.graysoncraw.ggainsbackend.model.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

@@ -1,7 +1,7 @@
 package com.graysoncraw.ggainsbackend.controller;
 
-import com.graysoncraw.ggainsbackend.dto.PersonalRecordRequestDTO;
-import com.graysoncraw.ggainsbackend.dto.PersonalRecordResponseDTO;
+import com.graysoncraw.ggainsbackend.dto.personalrecord.PersonalRecordRequestDTO;
+import com.graysoncraw.ggainsbackend.dto.personalrecord.PersonalRecordResponseDTO;
 import com.graysoncraw.ggainsbackend.mapper.PersonalRecordMapper;
 import com.graysoncraw.ggainsbackend.model.PersonalRecord;
 import com.graysoncraw.ggainsbackend.security.AuthenticatedUserGuard;

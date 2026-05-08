@@ -1,6 +1,6 @@
 package com.graysoncraw.ggainsbackend.service;
 
-import com.graysoncraw.ggainsbackend.dto.CycleProgressRequestDTO;
+import com.graysoncraw.ggainsbackend.dto.workoutcycle.CycleProgressRequestDTO;
 import com.graysoncraw.ggainsbackend.model.LiftType;
 import com.graysoncraw.ggainsbackend.model.User;
 import com.graysoncraw.ggainsbackend.model.WorkoutCycle;

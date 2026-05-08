@@ -1,8 +1,8 @@
 package com.graysoncraw.ggainsbackend.service;
 
-import com.graysoncraw.ggainsbackend.dto.CycleProgressRequestDTO;
-import com.graysoncraw.ggainsbackend.dto.PrescribedSetDTO;
-import com.graysoncraw.ggainsbackend.dto.PrescribedWorkoutDTO;
+import com.graysoncraw.ggainsbackend.dto.workoutcycle.CycleProgressRequestDTO;
+import com.graysoncraw.ggainsbackend.dto.workoutcycle.PrescribedSetDTO;
+import com.graysoncraw.ggainsbackend.dto.workoutcycle.PrescribedWorkoutDTO;
 import com.graysoncraw.ggainsbackend.model.LiftType;
 import com.graysoncraw.ggainsbackend.model.PersonalRecord;
 import com.graysoncraw.ggainsbackend.model.User;

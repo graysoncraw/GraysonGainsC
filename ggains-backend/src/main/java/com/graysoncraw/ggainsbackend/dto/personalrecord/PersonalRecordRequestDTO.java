@@ -1,4 +1,4 @@
-package com.graysoncraw.ggainsbackend.dto;
+package com.graysoncraw.ggainsbackend.dto.personalrecord;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;

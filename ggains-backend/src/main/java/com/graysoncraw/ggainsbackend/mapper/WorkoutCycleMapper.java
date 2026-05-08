@@ -1,6 +1,6 @@
 package com.graysoncraw.ggainsbackend.mapper;
 
-import com.graysoncraw.ggainsbackend.dto.WorkoutCycleResponseDTO;
+import com.graysoncraw.ggainsbackend.dto.workoutcycle.WorkoutCycleResponseDTO;
 import com.graysoncraw.ggainsbackend.model.WorkoutCycle;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

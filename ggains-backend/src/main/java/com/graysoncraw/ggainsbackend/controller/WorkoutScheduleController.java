@@ -1,7 +1,7 @@
 package com.graysoncraw.ggainsbackend.controller;
 
-import com.graysoncraw.ggainsbackend.dto.WorkoutScheduleRequestDTO;
-import com.graysoncraw.ggainsbackend.dto.WorkoutScheduleResponseDTO;
+import com.graysoncraw.ggainsbackend.dto.workoutschedule.WorkoutScheduleRequestDTO;
+import com.graysoncraw.ggainsbackend.dto.workoutschedule.WorkoutScheduleResponseDTO;
 import com.graysoncraw.ggainsbackend.mapper.WorkoutScheduleMapper;
 import com.graysoncraw.ggainsbackend.model.WorkoutSchedule;
 import com.graysoncraw.ggainsbackend.security.AuthenticatedUserGuard;

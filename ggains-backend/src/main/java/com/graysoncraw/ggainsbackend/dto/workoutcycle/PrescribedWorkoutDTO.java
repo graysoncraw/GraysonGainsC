@@ -1,4 +1,4 @@
-package com.graysoncraw.ggainsbackend.dto;
+package com.graysoncraw.ggainsbackend.dto.workoutcycle;
 
 import com.graysoncraw.ggainsbackend.model.LiftType;
 import lombok.Data;

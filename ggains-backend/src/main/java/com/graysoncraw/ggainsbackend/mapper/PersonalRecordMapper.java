@@ -1,7 +1,7 @@
 package com.graysoncraw.ggainsbackend.mapper;
 
-import com.graysoncraw.ggainsbackend.dto.PersonalRecordRequestDTO;
-import com.graysoncraw.ggainsbackend.dto.PersonalRecordResponseDTO;
+import com.graysoncraw.ggainsbackend.dto.personalrecord.PersonalRecordRequestDTO;
+import com.graysoncraw.ggainsbackend.dto.personalrecord.PersonalRecordResponseDTO;
 import com.graysoncraw.ggainsbackend.model.PersonalRecord;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

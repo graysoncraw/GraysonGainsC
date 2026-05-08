@@ -1,8 +1,8 @@
 package com.graysoncraw.ggainsbackend.controller;
 
-import com.graysoncraw.ggainsbackend.dto.CycleProgressRequestDTO;
-import com.graysoncraw.ggainsbackend.dto.PrescribedWorkoutDTO;
-import com.graysoncraw.ggainsbackend.dto.WorkoutCycleResponseDTO;
+import com.graysoncraw.ggainsbackend.dto.workoutcycle.CycleProgressRequestDTO;
+import com.graysoncraw.ggainsbackend.dto.workoutcycle.PrescribedWorkoutDTO;
+import com.graysoncraw.ggainsbackend.dto.workoutcycle.WorkoutCycleResponseDTO;
 import com.graysoncraw.ggainsbackend.mapper.WorkoutCycleMapper;
 import com.graysoncraw.ggainsbackend.model.WorkoutCycle;
 import com.graysoncraw.ggainsbackend.security.AuthenticatedUserGuard;

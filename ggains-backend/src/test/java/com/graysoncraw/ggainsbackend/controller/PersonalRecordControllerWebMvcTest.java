@@ -1,6 +1,6 @@
 package com.graysoncraw.ggainsbackend.controller;
 
-import com.graysoncraw.ggainsbackend.dto.PersonalRecordResponseDTO;
+import com.graysoncraw.ggainsbackend.dto.personalrecord.PersonalRecordResponseDTO;
 import com.graysoncraw.ggainsbackend.exception.GlobalExceptionHandler;
 import com.graysoncraw.ggainsbackend.mapper.PersonalRecordMapper;
 import com.graysoncraw.ggainsbackend.model.PersonalRecord;

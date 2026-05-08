@@ -1,7 +1,7 @@
 package com.graysoncraw.ggainsbackend.controller;
 
-import com.graysoncraw.ggainsbackend.dto.UserRequestDTO;
-import com.graysoncraw.ggainsbackend.dto.UserResponseDTO;
+import com.graysoncraw.ggainsbackend.dto.user.UserRequestDTO;
+import com.graysoncraw.ggainsbackend.dto.user.UserResponseDTO;
 import com.graysoncraw.ggainsbackend.exception.GlobalExceptionHandler;
 import com.graysoncraw.ggainsbackend.mapper.UserMapper;
 import com.graysoncraw.ggainsbackend.model.User;

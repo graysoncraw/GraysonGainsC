@@ -1,4 +1,4 @@
-package com.graysoncraw.ggainsbackend.dto;
+package com.graysoncraw.ggainsbackend.dto.workoutschedule;
 
 import lombok.Data;
 

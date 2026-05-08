@@ -1,6 +1,6 @@
 package com.graysoncraw.ggainsbackend.controller;
 
-import com.graysoncraw.ggainsbackend.dto.WorkoutScheduleResponseDTO;
+import com.graysoncraw.ggainsbackend.dto.workoutschedule.WorkoutScheduleResponseDTO;
 import com.graysoncraw.ggainsbackend.exception.GlobalExceptionHandler;
 import com.graysoncraw.ggainsbackend.mapper.WorkoutScheduleMapper;
 import com.graysoncraw.ggainsbackend.model.WorkoutSchedule;
