@@ -1,0 +1,103 @@
+<main class="shell">
+  <section class="auth-layout">
+    <div class="welcome glass">
+      <p class="eyebrow">GraysonGains</p>
+      <h1>Train. Track. Evolve.</h1>
+      <p class="lede">
+        A simple starting point for the app. Use email/password or Google SSO.
+      </p>
+
+      @if (error()) {
+        <div class="alert">{{ error() }}</div>
+      }
+
+    </div>
+
+    <div class="auth-card glass">
+      <div class="mode-switch" role="tablist" aria-label="Authentication mode">
+        <button
+          type="button"
+          class="mode-button"
+          [class.active]="!isSignupMode()"
+          (click)="setAuthMode('login')"
+        >
+          Log in
+        </button>
+        <button
+          type="button"
+          class="mode-button"
+          [class.active]="isSignupMode()"
+          (click)="setAuthMode('signup')"
+        >
+          Sign up
+        </button>
+      </div>
+
+      <div class="section-heading">
+        <p>{{ isSignupMode() ? 'Create your account' : 'Welcome back' }}</p>
+        <h2>{{ isSignupMode() ? 'Start your GraysonGains profile' : 'Open your existing account' }}</h2>
+      </div>
+      
+      @if (isSignupMode()) {
+          <div class="name-grid">
+            <label>
+              <span>First name</span>
+              <input
+                [ngModel]="form().firstName"
+                (ngModelChange)="updateField('firstName', $event)"
+                placeholder="Grayson"
+              />
+            </label>
+
+            <label>
+              <span>Last name</span>
+              <input
+                [ngModel]="form().lastName"
+                (ngModelChange)="updateField('lastName', $event)"
+                placeholder="Crawford"
+              />
+            </label>
+          </div>
+        }
+
+      <div class="field-grid">
+        <label>
+          <span>Email</span>
+          <input
+            type="email"
+            [ngModel]="form().email"
+            (ngModelChange)="updateField('email', $event)"
+            placeholder="grayson@example.com"
+          />
+        </label>
+
+        <label>
+          <span>Password</span>
+          <input
+            type="password"
+            [ngModel]="form().password"
+            (ngModelChange)="updateField('password', $event)"
+            placeholder="••••••••"
+          />
+        </label>
+      </div>
+
+      <div class="button-grid">
+        <button type="button" (click)="isSignupMode() ? signUp() : signIn()">{{ submitLabel() }}</button>
+      </div>
+
+      <div class="sso-row" aria-label="Single sign-on options">
+        <button type="button" class="sso-button" aria-label="Continue with Google" (click)="signInWithGoogle()">
+          <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+            <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303C33.649 32.657 29.28 36 24 36c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.055 0 5.842 1.154 7.96 3.042l5.657-5.657C35.067 6.053 29.844 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.652-.389-3.917z"/>
+            <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.654 16.108 18.928 13 24 13c3.055 0 5.842 1.154 7.96 3.042l5.657-5.657C35.067 6.053 29.844 4 24 4c-7.098 0-13.236 4.005-16.27 9.69z"/>
+            <path fill="#4CAF50" d="M24 44c5.767 0 10.904-2.21 14.8-5.8l-6.837-5.786C29.998 33.364 27.24 34.5 24 34.5c-5.257 0-9.61-3.3-11.26-7.88l-6.524 5.02C9.188 39.991 16.041 44 24 44z"/>
+            <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-1.146 3.234-3.33 5.837-6.053 7.414l.003-.002 6.837 5.786C35.58 39.962 44 33.5 44 24c0-1.341-.138-2.652-.389-3.917z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <router-outlet />
+</main>
