@@ -75,8 +75,8 @@ class PersonalRecordServiceTest {
     void getPersonalRecordByUserFirebaseUidThrowsWhenMissing() {
         when(personalRecordRepository.findByUser_FirebaseUid("uid-404")).thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
+        NoSuchElementException exception = assertThrows(
+                NoSuchElementException.class,
                 () -> personalRecordService.getPersonalRecordByUserFirebaseUid("uid-404")
         );
 

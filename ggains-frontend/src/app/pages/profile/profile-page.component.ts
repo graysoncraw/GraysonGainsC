@@ -2,9 +2,10 @@ import { Component, computed, effect, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { SessionService } from '../auth/session.service';
-import { FirebaseAuthService } from '../auth/firebase-auth.service';
-import { UserApiService, UserProfileRequest } from '../api/user-api.service';
+import { OnboardingFlowService } from '../../auth/onboarding-flow.service';
+import { SessionService } from '../../auth/session.service';
+import { FirebaseAuthService } from '../../auth/firebase-auth.service';
+import { UserApiService, UserProfileRequest } from '../../api/user-api.service';
 
 type ProfileFormState = UserProfileRequest;
 
@@ -35,6 +36,7 @@ export class ProfilePageComponent {
   constructor(
     private readonly session: SessionService,
     private readonly firebaseAuth: FirebaseAuthService,
+    private readonly onboardingFlow: OnboardingFlowService,
     private readonly userApi: UserApiService,
     private readonly router: Router,
     private readonly route: ActivatedRoute,
@@ -104,7 +106,7 @@ export class ProfilePageComponent {
       this.success.set('Profile saved.');
 
       if (this.onboardingMode()) {
-        await this.router.navigateByUrl('/setup/personal-records');
+        await this.router.navigateByUrl(await this.onboardingFlow.resolveRoute());
       }
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : 'Unable to save profile.');

@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -25,7 +26,7 @@ public class WorkoutScheduleService {
 
     public WorkoutSchedule createWorkoutSchedule(String firebaseUid, WorkoutSchedule workoutSchedule) {
         User user = userRepository.findById(firebaseUid)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new NoSuchElementException("User not found"));
 
         workoutSchedule.setUser(user);
         WorkoutSchedule saved = workoutScheduleRepository.save(workoutSchedule);
@@ -45,7 +46,7 @@ public class WorkoutScheduleService {
 
     public WorkoutSchedule updateWorkoutSchedule(WorkoutSchedule workoutSchedule) {
         if (!workoutScheduleRepository.existsById(workoutSchedule.getId())) {
-            throw new IllegalArgumentException("Workout schedule not found");
+            throw new NoSuchElementException("Workout schedule not found");
         }
         return workoutScheduleRepository.save(workoutSchedule);
     }

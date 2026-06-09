@@ -10,6 +10,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.NoSuchElementException;
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -23,8 +26,7 @@ public class PersonalRecordService {
 
     public PersonalRecord createPersonalRecord(String firebaseUid, PersonalRecord personalRecord) {
         User user = userRepository.findById(firebaseUid)
-                // By using orElseThrow, we can set this Optional user obj to a personal record
-                .orElseThrow(() -> new IllegalArgumentException("User with Firebase UID " + firebaseUid + " not found"));
+                .orElseThrow(() -> new NoSuchElementException("User with Firebase UID " + firebaseUid + " not found"));
 
         personalRecord.setUser(user);
         PersonalRecord saved = personalRecordRepository.save(personalRecord);
@@ -38,23 +40,21 @@ public class PersonalRecordService {
         return saved;
     }
 
-    public PersonalRecord getPersonalRecordByUserFirebaseUid(String firebaseUid) {
-        return personalRecordRepository.findByUser_FirebaseUid(firebaseUid)
-                .orElseThrow(() -> new IllegalArgumentException("Personal record for user with Firebase UID " + firebaseUid + " not found"));
-
+    public Optional<PersonalRecord> getPersonalRecordByUserFirebaseUid(String firebaseUid) {
+        return personalRecordRepository.findByUser_FirebaseUid(firebaseUid);
     }
 
     // For when a user hits a new PR
     public PersonalRecord updatePersonalRecord(PersonalRecord personalRecord) {
         if (!personalRecordRepository.existsById(personalRecord.getId())) {
-            throw new IllegalArgumentException("Personal record with ID " + personalRecord.getId() + " not found");
+            throw new NoSuchElementException("Personal record with ID " + personalRecord.getId() + " not found");
         }
         return personalRecordRepository.save(personalRecord);
     }
 
     public PersonalRecord updateSpecificPR(String firebaseUid, String liftType, Double newPR) {
         PersonalRecord pr = personalRecordRepository.findByUser_FirebaseUid(firebaseUid)
-                .orElseThrow(() -> new IllegalArgumentException("Personal record for user with Firebase UID " + firebaseUid + " not found"));
+                .orElseThrow(() -> new NoSuchElementException("Personal record for user with Firebase UID " + firebaseUid + " not found"));
 
         switch (liftType.toUpperCase()) {
             case "BENCH":

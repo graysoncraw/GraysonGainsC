@@ -25,12 +25,12 @@
       <div class="name-grid">
         <label>
           <span>First name</span>
-          <input [ngModel]="form().firstName" (ngModelChange)="updateField('firstName', $event)" placeholder="Grayson" />
+          <input [ngModel]="form().firstName" (ngModelChange)="updateField('firstName', $event)" placeholder="John" />
         </label>
 
         <label>
           <span>Last name</span>
-          <input [ngModel]="form().lastName" (ngModelChange)="updateField('lastName', $event)" placeholder="Crawford" />
+          <input [ngModel]="form().lastName" (ngModelChange)="updateField('lastName', $event)" placeholder="Doe" />
         </label>
       </div>
     }
@@ -38,7 +38,7 @@
     <div class="field-grid">
       <label>
         <span>Email</span>
-        <input type="email" [ngModel]="form().email" (ngModelChange)="updateField('email', $event)" placeholder="grayson@example.com" />
+        <input type="email" [ngModel]="form().email" (ngModelChange)="updateField('email', $event)" placeholder="johndoe@example.com" />
       </label>
 
       <label>

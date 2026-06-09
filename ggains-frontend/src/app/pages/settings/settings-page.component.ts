@@ -2,9 +2,9 @@ import { Component, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
-import { SessionService } from '../auth/session.service';
-import { FirebaseAuthService } from '../auth/firebase-auth.service';
-import { UserApiService, UserProfileResponse } from '../api/user-api.service';
+import { SessionService } from '../../auth/session.service';
+import { FirebaseAuthService } from '../../auth/firebase-auth.service';
+import { UserApiService, UserProfileResponse } from '../../api/user-api.service';
 
 @Component({
   selector: 'app-settings-page',

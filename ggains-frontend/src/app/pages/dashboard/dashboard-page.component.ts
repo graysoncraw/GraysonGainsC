@@ -1,8 +1,8 @@
 import { Component, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { SessionService } from '../auth/session.service';
-import { PrescribedWorkout, WorkoutCycleApiService, WorkoutCycleResponse } from '../api/workout-cycle-api.service';
+import { SessionService } from '../../auth/session.service';
+import { PrescribedWorkout, WorkoutCycleApiService, WorkoutCycleResponse } from '../../api/workout-cycle-api.service';
 
 @Component({
   selector: 'app-dashboard-page',

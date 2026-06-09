@@ -1,8 +1,8 @@
 import { Component, computed } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
-import { FirebaseAuthService } from '../auth/firebase-auth.service';
-import { SessionService } from '../auth/session.service';
+import { FirebaseAuthService } from '../../auth/firebase-auth.service';
+import { SessionService } from '../../auth/session.service';
 
 @Component({
   selector: 'app-shell',

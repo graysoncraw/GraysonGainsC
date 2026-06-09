@@ -1,18 +1,18 @@
 import { Routes } from '@angular/router';
 
-import { appGuard } from './auth/app.guard';
-import { guestGuard } from './auth/guest.guard';
-import { setupGuard } from './auth/setup.guard';
-import { AppShellComponent } from './pages/app-shell.component';
-import { AuthPageComponent } from './pages/auth-page.component';
-import { CyclesPageComponent } from './pages/cycles-page.component';
-import { DashboardPageComponent } from './pages/dashboard-page.component';
-import { PersonalRecordsPageComponent } from './pages/personal-records-page.component';
-import { ProfilePageComponent } from './pages/profile-page.component';
-import { SetupFinishPageComponent } from './pages/setup-finish-page.component';
-import { SetupShellComponent } from './pages/setup-shell.component';
-import { SchedulePageComponent } from './pages/schedule-page.component';
-import { SettingsPageComponent } from './pages/settings-page.component';
+import { appGuard } from './auth/guards/app.guard';
+import { guestGuard } from './auth/guards/guest.guard';
+import { setupGuard } from './auth/guards/setup.guard';
+import { AppShellComponent } from './pages/shell/app-shell.component';
+import { AuthPageComponent } from './pages/auth/auth-page.component';
+import { CyclesPageComponent } from './pages/cycles/cycles-page.component';
+import { DashboardPageComponent } from './pages/dashboard/dashboard-page.component';
+import { PersonalRecordsPageComponent } from './pages/personal-records/personal-records-page.component';
+import { ProfilePageComponent } from './pages/profile/profile-page.component';
+import { SetupFinishPageComponent } from './pages/setup/setup-finish-page.component';
+import { SetupShellComponent } from './pages/setup/setup-shell.component';
+import { SchedulePageComponent } from './pages/schedule/schedule-page.component';
+import { SettingsPageComponent } from './pages/settings/settings-page.component';
 
 export const routes: Routes = [
   {

@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 
-import { OnboardingFlowService } from './onboarding-flow.service';
+import { OnboardingFlowService } from '../onboarding-flow.service';
 
 export const setupGuard: CanActivateFn = async (_route, state) => {
   const flow = inject(OnboardingFlowService);

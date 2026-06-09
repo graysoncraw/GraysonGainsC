@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 
-import { FirebaseAuthService } from './firebase-auth.service';
+import { FirebaseAuthService } from '../firebase-auth.service';
 
 export const authGuard: CanActivateFn = async () => {
   const firebaseAuth = inject(FirebaseAuthService);

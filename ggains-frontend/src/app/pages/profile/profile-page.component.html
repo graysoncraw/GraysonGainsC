@@ -53,8 +53,10 @@
     <button type="button" class="primary-button" [disabled]="loading()" (click)="save()">
       {{ loading() ? 'Saving...' : 'Save profile' }}
     </button>
+    @if (!onboardingMode()){
     <button type="button" class="secondary-button danger" [disabled]="deleting()" (click)="deleteAccount()">
-      {{ deleting() ? 'Deleting...' : 'Delete backend profile' }}
+      {{ deleting() ? 'Deleting...' : 'Delete profile' }}
     </button>
+    }
   </div>
 </section>

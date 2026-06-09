@@ -2,7 +2,7 @@ import { Component, computed, effect, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
-import { FirebaseAuthService } from '../auth/firebase-auth.service';
+import { FirebaseAuthService } from '../../auth/firebase-auth.service';
 
 type AuthMode = 'login' | 'signup';
 

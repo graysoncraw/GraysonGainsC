@@ -22,6 +22,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -53,13 +54,13 @@ public class WorkoutCycleService {
         }
 
         User user = userRepository.findById(firebaseUid)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new NoSuchElementException("User not found"));
 
         PersonalRecord pr = personalRecordRepository.findByUser_FirebaseUid(firebaseUid)
-                .orElseThrow(() -> new IllegalArgumentException("Personal records not found for user"));
+                .orElseThrow(() -> new NoSuchElementException("Personal records not found for user"));
 
         WorkoutSchedule schedule = workoutScheduleRepository.findByUser_FirebaseUid(firebaseUid)
-                .orElseThrow(() -> new IllegalArgumentException("Workout schedule not found for user"));
+                .orElseThrow(() -> new NoSuchElementException("Workout schedule not found for user"));
 
         double benchTM = roundToNearest5(pr.getBenchPressPR() * 0.90);
         double squatTM = roundToNearest5(pr.getSquatPR() * 0.90);
@@ -88,7 +89,7 @@ public class WorkoutCycleService {
 
     public WorkoutCycle getActiveCycle(String firebaseUid) {
         return workoutCycleRepository.findByUser_FirebaseUidAndIsActiveTrue(firebaseUid)
-                .orElseThrow(() -> new IllegalStateException("No active workout cycle found for user"));
+                .orElseThrow(() -> new NoSuchElementException("No active workout cycle found for user"));
     }
 
     public PrescribedWorkoutDTO calculatePrescribedWorkout(String firebaseUid, LocalDate date) {
@@ -102,7 +103,7 @@ public class WorkoutCycleService {
         }
 
         WorkoutSchedule schedule = workoutScheduleRepository.findByUser_FirebaseUid(firebaseUid)
-                .orElseThrow(() -> new IllegalArgumentException("Workout schedule not found"));
+                .orElseThrow(() -> new NoSuchElementException("Workout schedule not found"));
 
         int weekNumber = calculateWeekNumber(cycle.getStartDate(), date);
 
@@ -134,7 +135,7 @@ public class WorkoutCycleService {
         WorkoutCycle currentCycle = getActiveCycle(firebaseUid);
 
         User user = userRepository.findById(firebaseUid)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new NoSuchElementException("User not found"));
 
         Map<LiftType, Boolean> outcomes = validateAndExtractOutcomes(request);
 

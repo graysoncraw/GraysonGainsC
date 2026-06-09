@@ -1,14 +1,14 @@
 import { Component, computed, effect, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-import { SessionService } from '../auth/session.service';
+import { SessionService } from '../../auth/session.service';
 import {
   CycleProgressRequest,
   LiftType,
   PrescribedWorkout,
   WorkoutCycleApiService,
   WorkoutCycleResponse,
-} from '../api/workout-cycle-api.service';
+} from '../../api/workout-cycle-api.service';
 
 const LIFTS: LiftType[] = ['BENCH', 'SQUAT', 'DEADLIFT', 'SHOULDER_PRESS'];
 

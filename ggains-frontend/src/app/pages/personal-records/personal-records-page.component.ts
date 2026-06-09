@@ -2,12 +2,13 @@ import { Component, computed, effect, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { SessionService } from '../auth/session.service';
+import { OnboardingFlowService } from '../../auth/onboarding-flow.service';
+import { SessionService } from '../../auth/session.service';
 import {
   PersonalRecordApiService,
   PersonalRecordRequest,
   PersonalRecordResponse,
-} from '../api/personal-record-api.service';
+} from '../../api/personal-record-api.service';
 
 type LiftType = 'benchPressPR' | 'squatPR' | 'deadliftPR' | 'shoulderPressPR';
 
@@ -36,6 +37,7 @@ export class PersonalRecordsPageComponent {
   constructor(
     private readonly session: SessionService,
     private readonly personalRecordApi: PersonalRecordApiService,
+    private readonly onboardingFlow: OnboardingFlowService,
     private readonly router: Router,
     private readonly route: ActivatedRoute,
   ) {
@@ -107,7 +109,7 @@ export class PersonalRecordsPageComponent {
       this.success.set(wasExisting ? 'Personal records saved.' : 'Personal records created.');
 
       if (this.onboardingMode()) {
-        await this.router.navigateByUrl('/setup/schedule');
+        await this.router.navigateByUrl(await this.onboardingFlow.resolveRoute());
       }
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : 'Unable to save personal records.');

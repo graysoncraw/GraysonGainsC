@@ -98,6 +98,17 @@ class PersonalRecordControllerWebMvcTest {
     }
 
     @Test
+    void getPersonalRecordReturnsNotFoundWhenMissing() throws Exception {
+        doNothing().when(authenticatedUserGuard).requireUidMatches("uid-123");
+        when(personalRecordService.getPersonalRecordByUserFirebaseUid("uid-123"))
+                .thenThrow(new NoSuchElementException("Personal record for user with Firebase UID uid-123 not found"));
+
+        mockMvc.perform(get("/api/users/uid-123/personal-record"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404));
+    }
+
+    @Test
     void updateSpecificPrReturnsMappedRecord() throws Exception {
         PersonalRecord updated = PersonalRecord.builder().id(11L).build();
         PersonalRecordResponseDTO response = new PersonalRecordResponseDTO();

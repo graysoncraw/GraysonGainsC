@@ -76,8 +76,8 @@ class WorkoutScheduleServiceTest {
         WorkoutSchedule request = WorkoutSchedule.builder().id(88L).build();
         when(workoutScheduleRepository.existsById(88L)).thenReturn(false);
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
+        NoSuchElementException exception = assertThrows(
+                NoSuchElementException.class,
                 () -> workoutScheduleService.updateWorkoutSchedule(request)
         );
 

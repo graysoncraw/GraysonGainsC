@@ -2,14 +2,14 @@ import { Component, computed, effect, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { OnboardingFlowService } from '../auth/onboarding-flow.service';
-import { SessionService } from '../auth/session.service';
+import { OnboardingFlowService } from '../../auth/onboarding-flow.service';
+import { SessionService } from '../../auth/session.service';
 import {
   DayOfWeek,
   WorkoutScheduleApiService,
   WorkoutScheduleRequest,
   WorkoutScheduleResponse,
-} from '../api/workout-schedule-api.service';
+} from '../../api/workout-schedule-api.service';
 
 const DAYS: DayOfWeek[] = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
 

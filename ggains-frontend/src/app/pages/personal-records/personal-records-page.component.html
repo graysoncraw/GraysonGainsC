@@ -39,7 +39,7 @@
       {{ loading() ? 'Saving...' : 'Save all PRs' }}
     </button>
   </div>
-
+  @if (!onboardingMode()) {
   <article class="panel nested-panel">
     <div class="section-heading compact">
       <p>Quick update</p>
@@ -67,4 +67,5 @@
       <button type="button" class="secondary-button" [disabled]="loading()" (click)="updateSpecificLift()">Patch lift</button>
     </div>
   </article>
+  }
 </section>

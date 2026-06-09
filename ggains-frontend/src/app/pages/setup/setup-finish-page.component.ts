@@ -1,7 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { OnboardingFlowService } from '../auth/onboarding-flow.service';
+import { OnboardingFlowService } from '../../auth/onboarding-flow.service';
 
 @Component({
   selector: 'app-setup-finish-page',

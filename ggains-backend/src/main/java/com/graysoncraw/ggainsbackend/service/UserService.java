@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -31,14 +32,14 @@ public class UserService {
 
     public User updateUser(User user) {
         if (!userRepository.existsById(user.getFirebaseUid())) {
-            throw new IllegalArgumentException("User with Firebase UID " + user.getFirebaseUid() + " does not exist");
+            throw new NoSuchElementException("User with Firebase UID " + user.getFirebaseUid() + " does not exist");
         }
         return userRepository.save(user);
     }
 
     public void deleteUser(String firebaseUid) {
         if (!userRepository.existsById(firebaseUid)) {
-            throw new IllegalArgumentException("User with Firebase UID " + firebaseUid + " does not exist");
+            throw new NoSuchElementException("User with Firebase UID " + firebaseUid + " does not exist");
         }
         userRepository.deleteById(firebaseUid);
     }

@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.NoSuchElementException;
+
 @RestController
 @RequestMapping("/api/users/{firebaseUid}/personal-record")
 @RequiredArgsConstructor
@@ -44,7 +46,8 @@ public class PersonalRecordController {
     @GetMapping
     public PersonalRecordResponseDTO getPersonalRecord(@PathVariable String firebaseUid) {
         authenticatedUserGuard.requireUidMatches(firebaseUid);
-        PersonalRecord record = personalRecordService.getPersonalRecordByUserFirebaseUid(firebaseUid);
+        PersonalRecord record = personalRecordService.getPersonalRecordByUserFirebaseUid(firebaseUid)
+                .orElseThrow(() -> new NoSuchElementException("PR for firebaseUid: " + firebaseUid));
         return personalRecordMapper.toResponse(record);
     }
 
@@ -54,7 +57,8 @@ public class PersonalRecordController {
             @Valid @RequestBody PersonalRecordRequestDTO request
     ) {
         authenticatedUserGuard.requireUidMatches(firebaseUid);
-        PersonalRecord existingRecord = personalRecordService.getPersonalRecordByUserFirebaseUid(firebaseUid);
+        PersonalRecord existingRecord = personalRecordService.getPersonalRecordByUserFirebaseUid(firebaseUid)
+                .orElseThrow(() -> new NoSuchElementException("PR for firebaseUid: " + firebaseUid));
         PersonalRecord personalRecord = personalRecordMapper.toEntity(request);
         personalRecord.setId(existingRecord.getId());
         personalRecord.setUser(existingRecord.getUser());
