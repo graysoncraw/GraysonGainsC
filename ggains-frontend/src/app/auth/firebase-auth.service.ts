@@ -6,6 +6,7 @@ import {
   createUserWithEmailAndPassword,
   getAuth,
   onAuthStateChanged,
+  updateProfile,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
@@ -38,10 +39,13 @@ export class FirebaseAuthService {
     this.bootstrap();
   }
 
-  async signUpWithEmail(email: string, password: string): Promise<void> {
+  async signUpWithEmail(email: string, password: string, displayName?: string): Promise<void> {
     const auth = this.ensureAuth();
     this.setError('');
     const credential = await createUserWithEmailAndPassword(auth, email, password);
+    if (displayName && displayName.trim()) {
+      await updateProfile(credential.user, { displayName: displayName.trim() });
+    }
     await this.syncSnapshot(credential.user);
   }
 
@@ -76,6 +80,21 @@ export class FirebaseAuthService {
     }
 
     await this.syncSnapshot(user);
+  }
+
+  async waitUntilReady(): Promise<void> {
+    if (this.readySignal()) {
+      return;
+    }
+
+    await new Promise<void>((resolve) => {
+      const interval = window.setInterval(() => {
+        if (this.readySignal()) {
+          window.clearInterval(interval);
+          resolve();
+        }
+      }, 20);
+    });
   }
 
   reportError(message: string): void {

@@ -1,47 +1,26 @@
-import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
 
-import { BACKEND_API_BASE_URL } from './app-config';
-
-export interface BackendUserProfile {
-  firstName: string;
-  lastName: string;
-  email: string;
-  gender?: string;
-  heightFt?: number;
-  heightIn?: number;
-  weight?: number;
-}
+import { UserApiService, UserProfileRequest } from '../api/user-api.service';
 
 @Injectable({ providedIn: 'root' })
 export class BackendUserSyncService {
-  constructor(private readonly http: HttpClient) {}
+  constructor(private readonly userApi: UserApiService) {}
 
-  async ensureUser(firebaseUid: string, idToken: string, profile: BackendUserProfile): Promise<'existing' | 'created'> {
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${idToken}`,
-    });
-    const userUrl = `${BACKEND_API_BASE_URL}/api/users/${firebaseUid}`;
-
+  async ensureUser(firebaseUid: string, profile: UserProfileRequest): Promise<'existing' | 'created'> {
     try {
-      await firstValueFrom(this.http.get(userUrl, { headers }));
+      await this.userApi.getUserByFirebaseUid(firebaseUid);
       return 'existing';
     } catch (error) {
       if (!this.isNotFound(error)) {
         throw error;
       }
 
-      await firstValueFrom(
-        this.http.post(`${BACKEND_API_BASE_URL}/api/users`, profile, {
-          headers,
-        }),
-      );
+      await this.userApi.createUser(profile);
       return 'created';
     }
   }
 
   private isNotFound(error: unknown): boolean {
-    return error instanceof HttpErrorResponse && error.status === 404;
+    return Boolean(error && typeof error === 'object' && 'status' in error && (error as { status?: number }).status === 404);
   }
 }

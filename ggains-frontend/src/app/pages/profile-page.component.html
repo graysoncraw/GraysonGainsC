@@ -1,0 +1,60 @@
+<section class="page-section">
+  <div class="section-heading">
+    <p>Profile</p>
+    <h2>Manage the backend user record</h2>
+  </div>
+
+  @if (error()) {
+    <div class="status-banner error">{{ error() }}</div>
+  }
+
+  @if (success()) {
+    <div class="status-banner success">{{ success() }}</div>
+  }
+
+  <div class="form-grid">
+    <label>
+      <span>First name</span>
+      <input [ngModel]="form().firstName" (ngModelChange)="updateField('firstName', $event)" />
+    </label>
+
+    <label>
+      <span>Last name</span>
+      <input [ngModel]="form().lastName" (ngModelChange)="updateField('lastName', $event)" />
+    </label>
+
+    <label>
+      <span>Email</span>
+      <input [ngModel]="form().email" (ngModelChange)="updateField('email', $event)" />
+    </label>
+
+    <label>
+      <span>Gender</span>
+      <input [ngModel]="form().gender" (ngModelChange)="updateField('gender', $event)" placeholder="Optional" />
+    </label>
+
+    <label>
+      <span>Height ft</span>
+      <input type="number" [ngModel]="form().heightFt" (ngModelChange)="updateNumberField('heightFt', $event)" />
+    </label>
+
+    <label>
+      <span>Height in</span>
+      <input type="number" [ngModel]="form().heightIn" (ngModelChange)="updateNumberField('heightIn', $event)" />
+    </label>
+
+    <label>
+      <span>Weight</span>
+      <input type="number" [ngModel]="form().weight" (ngModelChange)="updateNumberField('weight', $event)" />
+    </label>
+  </div>
+
+  <div class="button-row">
+    <button type="button" class="primary-button" [disabled]="loading()" (click)="save()">
+      {{ loading() ? 'Saving...' : 'Save profile' }}
+    </button>
+    <button type="button" class="secondary-button danger" [disabled]="deleting()" (click)="deleteAccount()">
+      {{ deleting() ? 'Deleting...' : 'Delete backend profile' }}
+    </button>
+  </div>
+</section>

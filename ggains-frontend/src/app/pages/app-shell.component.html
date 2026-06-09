@@ -1,0 +1,34 @@
+<main class="page shell-page">
+  <header class="shell-header glass">
+    <div>
+      <p class="eyebrow">GraysonGains</p>
+      <h1>Training console</h1>
+    </div>
+
+    <div class="shell-user">
+      <span>{{ user()?.firstName || 'Athlete' }} {{ user()?.lastName || '' }}</span>
+      <span>{{ user()?.email || 'Loading session...' }}</span>
+    </div>
+
+    <button type="button" class="secondary-button" (click)="signOut()">Sign out</button>
+  </header>
+
+  <nav class="shell-nav glass" aria-label="Primary navigation">
+    <a routerLink="/app" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Dashboard</a>
+    <a routerLink="/app/profile" routerLinkActive="active">Profile</a>
+    <a routerLink="/app/personal-records" routerLinkActive="active">PRs</a>
+    <a routerLink="/app/schedule" routerLinkActive="active">Schedule</a>
+    <a routerLink="/app/cycles" routerLinkActive="active">Cycles</a>
+    <a routerLink="/app/settings" routerLinkActive="active">Settings</a>
+  </nav>
+
+  @if (status() === 'loading') {
+    <section class="status-banner glass">Syncing your backend profile...</section>
+  } @else if (status() === 'error') {
+    <section class="status-banner glass error">{{ statusMessage() }}</section>
+  }
+
+  <section class="shell-content glass">
+    <router-outlet />
+  </section>
+</main>

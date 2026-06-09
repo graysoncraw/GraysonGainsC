@@ -1,0 +1,70 @@
+<section class="page-section">
+  <div class="section-heading">
+    <p>Personal records</p>
+    <h2>Track your main lift maxes</h2>
+  </div>
+
+  @if (error()) {
+    <div class="status-banner error">{{ error() }}</div>
+  }
+
+  @if (success()) {
+    <div class="status-banner success">{{ success() }}</div>
+  }
+
+  <div class="form-grid">
+    <label>
+      <span>Bench press PR</span>
+      <input type="number" [ngModel]="form().benchPressPR" (ngModelChange)="updateNumberField('benchPressPR', $event)" />
+    </label>
+
+    <label>
+      <span>Squat PR</span>
+      <input type="number" [ngModel]="form().squatPR" (ngModelChange)="updateNumberField('squatPR', $event)" />
+    </label>
+
+    <label>
+      <span>Deadlift PR</span>
+      <input type="number" [ngModel]="form().deadliftPR" (ngModelChange)="updateNumberField('deadliftPR', $event)" />
+    </label>
+
+    <label>
+      <span>Shoulder press PR</span>
+      <input type="number" [ngModel]="form().shoulderPressPR" (ngModelChange)="updateNumberField('shoulderPressPR', $event)" />
+    </label>
+  </div>
+
+  <div class="button-row">
+    <button type="button" class="primary-button" [disabled]="loading()" (click)="save()">
+      {{ loading() ? 'Saving...' : 'Save all PRs' }}
+    </button>
+  </div>
+
+  <article class="panel nested-panel">
+    <div class="section-heading compact">
+      <p>Quick update</p>
+      <h3>Patch one lift only</h3>
+    </div>
+
+    <div class="form-grid three-up">
+      <label>
+        <span>Lift</span>
+        <select [ngModel]="patchLift()" (ngModelChange)="patchLift.set($event)">
+          <option value="benchPressPR">Bench press</option>
+          <option value="squatPR">Squat</option>
+          <option value="deadliftPR">Deadlift</option>
+          <option value="shoulderPressPR">Shoulder press</option>
+        </select>
+      </label>
+
+      <label>
+        <span>New PR</span>
+        <input type="number" [ngModel]="patchValue()" (ngModelChange)="patchValue.set($event)" />
+      </label>
+    </div>
+
+    <div class="button-row">
+      <button type="button" class="secondary-button" [disabled]="loading()" (click)="updateSpecificLift()">Patch lift</button>
+    </div>
+  </article>
+</section>

@@ -1,0 +1,108 @@
+<section class="page-section">
+  <div class="section-heading">
+    <p>Cycles</p>
+    <h2>Watch your 5/3/1 progress</h2>
+  </div>
+
+  @if (error()) {
+    <div class="status-banner error">{{ error() }}</div>
+  }
+
+  @if (success()) {
+    <div class="status-banner success">{{ success() }}</div>
+  }
+
+  <div class="two-column">
+    <article class="panel">
+      <div class="section-heading compact">
+        <p>Active cycle</p>
+        <h3>{{ activeCycle() ? 'Cycle #' + activeCycle()!.cycleNumber : 'No active cycle' }}</h3>
+      </div>
+
+      @if (activeCycle()) {
+        <ul class="detail-list">
+          <li><span>Start</span><strong>{{ activeCycle()!.startDate }}</strong></li>
+          <li><span>End</span><strong>{{ activeCycle()!.endDate }}</strong></li>
+          <li><span>Bench TM</span><strong>{{ activeCycle()!.benchTrainingMax }} lbs</strong></li>
+          <li><span>Squat TM</span><strong>{{ activeCycle()!.squatTrainingMax }} lbs</strong></li>
+          <li><span>Deadlift TM</span><strong>{{ activeCycle()!.deadliftTrainingMax }} lbs</strong></li>
+          <li><span>Shoulder TM</span><strong>{{ activeCycle()!.shoulderPressTrainingMax }} lbs</strong></li>
+        </ul>
+      } @else {
+        <p class="subtle-text">No active cycle has been returned yet.</p>
+      }
+    </article>
+
+    <article class="panel">
+      <div class="section-heading compact">
+        <p>Prescribed workout</p>
+        <h3>Pick a date and refresh</h3>
+      </div>
+
+      <div class="button-row">
+        <label class="inline-field">
+          <span>Date</span>
+          <input type="date" [ngModel]="date()" (ngModelChange)="date.set($event)" />
+        </label>
+        <button type="button" class="secondary-button" (click)="refreshPrescribedWorkout()">Refresh</button>
+      </div>
+
+      @if (prescribedWorkout()) {
+        <p class="subtle-text">{{ prescribedWorkout()!.liftType }} · Week {{ prescribedWorkout()!.weekNumber }}</p>
+        <ul class="set-list">
+          @for (set of prescribedWorkout()!.sets; track set.setNumber) {
+            <li>
+              <strong>Set {{ set.setNumber }}</strong>
+              <span>{{ set.weight }} lbs × {{ set.reps }} {{ set.isAmrap ? '+' : '' }}</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="subtle-text">No prescribed workout loaded for the selected date.</p>
+      }
+    </article>
+  </div>
+
+  <article class="panel nested-panel">
+    <div class="section-heading compact">
+      <p>Cycle progress</p>
+      <h3>Mark your lift outcomes</h3>
+    </div>
+
+    <div class="checkbox-grid">
+      @for (lift of lifts; track lift) {
+        <label class="checkbox-row">
+          <input type="checkbox" [checked]="liftOutcomes()[lift]" (change)="updateOutcome(lift, $any($event.target).checked)" />
+          <span>{{ lift }}</span>
+        </label>
+      }
+    </div>
+
+    <div class="button-row">
+      <button type="button" class="primary-button" [disabled]="progressLoading()" (click)="progressCycle()">
+        {{ progressLoading() ? 'Submitting...' : 'Submit cycle progress' }}
+      </button>
+    </div>
+  </article>
+
+  <article class="panel nested-panel">
+    <div class="section-heading compact">
+      <p>History</p>
+      <h3>Recent cycles</h3>
+    </div>
+
+    @if (history().length) {
+      <div class="history-grid">
+        @for (cycle of history(); track cycle.id) {
+          <div class="history-card">
+            <strong>Cycle #{{ cycle.cycleNumber }}</strong>
+            <span>{{ cycle.startDate }} - {{ cycle.endDate }}</span>
+            <span>{{ cycle.isActive ? 'Active' : 'Complete' }}</span>
+          </div>
+        }
+      </div>
+    } @else {
+      <p class="subtle-text">No cycle history returned yet.</p>
+    }
+  </article>
+</section>
