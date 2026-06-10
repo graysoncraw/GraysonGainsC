@@ -39,19 +39,24 @@ public class User {
     private LocalDateTime dateCreated;
 
     @Column(name = "gender")
+    @NotBlank(message = "Gender is required")
+    @Pattern(regexp = "^(Male|Female)$", message = "Gender must be Male or Female")
     private String gender;
 
     @Column(name = "height_ft")
+    @NotNull(message = "Height in feet is required")
     @Min(value = 0, message = "Height in feet must be positive")
     private Integer heightFt;
 
     @Column(name = "height_in")
+    @NotNull(message = "Height in inches is required")
     @Min(value = 0, message = "Height in inches must be positive")
     @Max(value = 11, message = "Height in inches must be less than 12")
     private Integer heightIn;
 
     @Column(name = "weight")
-    @Min(value = 0, message = "Weight must be positive")
+    @NotNull(message = "Weight is required")
+    @Positive(message = "Weight must be greater than 0")
     private Double weight;
 
     // Relationships

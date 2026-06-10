@@ -54,6 +54,7 @@ class UserControllerWebMvcTest {
         request.setFirstName("Grayson");
         request.setLastName("Crawford");
         request.setEmail("grayson@example.com");
+        request.setGender("Male");
         request.setHeightFt(6);
         request.setHeightIn(0);
         request.setWeight(185.0);
@@ -78,6 +79,7 @@ class UserControllerWebMvcTest {
                                   "firstName":"Grayson",
                                   "lastName":"Crawford",
                                   "email":"grayson@example.com",
+                                  "gender":"Male",
                                   "heightFt":6,
                                   "heightIn":0,
                                   "weight":185.0
@@ -85,6 +87,43 @@ class UserControllerWebMvcTest {
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.firebaseUid").value("uid-123"));
+    }
+
+    @Test
+    void createUserReturnsBadRequestWhenGenderMissing() throws Exception {
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "firstName":"Grayson",
+                                  "lastName":"Crawford",
+                                  "email":"grayson@example.com",
+                                  "heightFt":6,
+                                  "heightIn":0,
+                                  "weight":185.0
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("gender: Gender is required"));
+    }
+
+    @Test
+    void createUserReturnsBadRequestWhenGenderInvalid() throws Exception {
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "firstName":"Grayson",
+                                  "lastName":"Crawford",
+                                  "email":"grayson@example.com",
+                                  "gender":"Other",
+                                  "heightFt":6,
+                                  "heightIn":0,
+                                  "weight":185.0
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("gender: Gender must be Male or Female"));
     }
 
     @Test

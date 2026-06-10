@@ -5,81 +5,109 @@ import {
   User,
   createUserWithEmailAndPassword,
   getAuth,
+  getIdToken,
   onAuthStateChanged,
-  updateProfile,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
+  updateProfile,
   Unsubscribe,
 } from 'firebase/auth';
-import { FirebaseApp, FirebaseOptions, getApp, getApps, initializeApp } from 'firebase/app';
+import { initializeApp } from 'firebase/app';
 
 import { FIREBASE_WEB_CONFIG } from './app-config';
-import { AuthSnapshot, FirebaseWebConfig } from './firebase-auth.types';
-
-const AUTH_SNAPSHOT_STORAGE_KEY = 'graysongains.authSnapshot';
 
 @Injectable({ providedIn: 'root' })
 export class FirebaseAuthService {
   private readonly authSignal = signal<Auth | null>(null);
   private readonly userSignal = signal<User | null>(null);
-  private readonly snapshotSignal = signal<AuthSnapshot | null>(this.loadStoredSnapshot());
-  private readonly errorSignal = signal<string>('');
+  private readonly idTokenSignal = signal('');
+  private readonly errorSignal = signal('');
   private readonly readySignal = signal(false);
+  private readonly readyPromise: Promise<void>;
+  private readyResolver: (() => void) | null = null;
   private authStateUnsubscribe: Unsubscribe | null = null;
 
   readonly user = computed(() => this.userSignal());
-  readonly snapshot = computed(() => this.snapshotSignal());
   readonly error = computed(() => this.errorSignal());
   readonly ready = computed(() => this.readySignal());
-  readonly firebaseUid = computed(() => this.snapshotSignal()?.firebaseUid ?? '');
-  readonly idToken = computed(() => this.snapshotSignal()?.idToken ?? '');
+  readonly firebaseUid = computed(() => this.userSignal()?.uid ?? '');
+  readonly idToken = computed(() => this.idTokenSignal());
 
   constructor() {
+    this.readyPromise = new Promise<void>((resolve) => {
+      this.readyResolver = resolve;
+    });
+
     this.bootstrap();
   }
 
   async signUpWithEmail(email: string, password: string, displayName?: string): Promise<void> {
     const auth = this.ensureAuth();
-    this.setError('');
-    const credential = await createUserWithEmailAndPassword(auth, email, password);
-    if (displayName && displayName.trim()) {
-      await updateProfile(credential.user, { displayName: displayName.trim() });
+    this.clearError();
+
+    try {
+      const credential = await createUserWithEmailAndPassword(auth, email, password);
+      if (displayName && displayName.trim()) {
+        await updateProfile(credential.user, { displayName: displayName.trim() });
+      }
+
+      await this.syncUserState(credential.user, true);
+    } catch (error) {
+      this.setError();
+      throw error;
     }
-    await this.syncSnapshot(credential.user);
   }
 
   async signInWithEmail(email: string, password: string): Promise<void> {
     const auth = this.ensureAuth();
-    this.setError('');
-    const credential = await signInWithEmailAndPassword(auth, email, password);
-    await this.syncSnapshot(credential.user);
+    this.clearError();
+
+    try {
+      const credential = await signInWithEmailAndPassword(auth, email, password);
+      await this.syncUserState(credential.user, true);
+    } catch (error) {
+      this.setError();
+      throw error;
+    }
   }
 
   async signInWithGoogle(): Promise<void> {
     const auth = this.ensureAuth();
-    this.setError('');
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
-    const credential = await signInWithPopup(auth, provider);
-    await this.syncSnapshot(credential.user);
+    this.clearError();
+
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      const credential = await signInWithPopup(auth, provider);
+      await this.syncUserState(credential.user, true);
+    } catch (error) {
+      this.setError();
+      throw error;
+    }
   }
 
   async signOut(): Promise<void> {
     const auth = this.ensureAuth();
-    await signOut(auth);
-    this.userSignal.set(null);
-    this.snapshotSignal.set(null);
-    this.persistSnapshot(null);
+    this.clearError();
+
+    try {
+      await signOut(auth);
+      this.clearUserState();
+    } catch (error) {
+      this.setError();
+      throw error;
+    }
   }
 
   async refreshIdToken(): Promise<void> {
     const user = this.userSignal();
     if (!user) {
+      this.idTokenSignal.set('');
       return;
     }
 
-    await this.syncSnapshot(user);
+    await this.syncUserState(user, true);
   }
 
   async waitUntilReady(): Promise<void> {
@@ -87,30 +115,12 @@ export class FirebaseAuthService {
       return;
     }
 
-    await new Promise<void>((resolve) => {
-      const interval = window.setInterval(() => {
-        if (this.readySignal()) {
-          window.clearInterval(interval);
-          resolve();
-        }
-      }, 20);
-    });
-  }
-
-  reportError(message: string): void {
-    this.setError(message);
+    await this.readyPromise;
   }
 
   private bootstrap(): void {
     const config = FIREBASE_WEB_CONFIG;
-    if (!this.isValidConfig(config)) {
-      this.errorSignal.set('Set your Firebase web config in src/app/auth/app-config.ts.');
-      this.readySignal.set(false);
-      return;
-    }
-
-    const app = this.ensureApp(config);
-    const auth = getAuth(app);
+    const auth = getAuth(initializeApp(config));
     this.authSignal.set(auth);
 
     if (this.authStateUnsubscribe) {
@@ -118,30 +128,38 @@ export class FirebaseAuthService {
     }
 
     this.authStateUnsubscribe = onAuthStateChanged(auth, async (user) => {
-      this.userSignal.set(user);
-      if (user) {
-        await this.syncSnapshot(user);
-      } else {
-        this.snapshotSignal.set(null);
-        this.persistSnapshot(null);
+      try {
+        if (user) {
+          await this.syncUserState(user, false);
+        } else {
+          this.clearUserState();
+        }
+      } catch (error) {
+        this.setError();
+      } finally {
+        this.markReady();
       }
-      this.readySignal.set(true);
     });
   }
 
-  private ensureApp(config: FirebaseWebConfig): FirebaseApp {
-    const firebaseOptions: FirebaseOptions = {
-      apiKey: config.apiKey,
-      authDomain: config.authDomain,
-      projectId: config.projectId,
-      appId: config.appId,
-    };
+  private async syncUserState(user: User, forceRefresh: boolean): Promise<void> {
+    this.userSignal.set(user);
+    this.idTokenSignal.set(await getIdToken(user, forceRefresh));
+  }
 
-    if (getApps().length > 0) {
-      return getApp();
+  private clearUserState(): void {
+    this.userSignal.set(null);
+    this.idTokenSignal.set('');
+  }
+
+  private markReady(): void {
+    if (this.readySignal()) {
+      return;
     }
 
-    return initializeApp(firebaseOptions);
+    this.readySignal.set(true);
+    this.readyResolver?.();
+    this.readyResolver = null;
   }
 
   private ensureAuth(): Auth {
@@ -153,50 +171,11 @@ export class FirebaseAuthService {
     return auth;
   }
 
-  private async syncSnapshot(user: User): Promise<void> {
-    const snapshot: AuthSnapshot = {
-      email: user.email ?? '',
-      firebaseUid: user.uid,
-      idToken: await user.getIdToken(true),
-      displayName: user.displayName ?? '',
-    };
-
-    this.snapshotSignal.set(snapshot);
-    this.persistSnapshot(snapshot);
+  private clearError(): void {
+    this.errorSignal.set('');
   }
 
-  private persistSnapshot(snapshot: AuthSnapshot | null): void {
-    if (snapshot) {
-      localStorage.setItem(AUTH_SNAPSHOT_STORAGE_KEY, JSON.stringify(snapshot));
-      return;
-    }
-
-    localStorage.removeItem(AUTH_SNAPSHOT_STORAGE_KEY);
-  }
-
-  private loadStoredSnapshot(): AuthSnapshot | null {
-    const raw = localStorage.getItem(AUTH_SNAPSHOT_STORAGE_KEY);
-    if (!raw) {
-      return null;
-    }
-
-    try {
-      return JSON.parse(raw) as AuthSnapshot;
-    } catch {
-      return null;
-    }
-  }
-
-  private setError(message: string): void {
-    this.errorSignal.set(message);
-  }
-
-  private isValidConfig(config: FirebaseWebConfig): boolean {
-    return (
-      !config.apiKey.startsWith('REPLACE_') &&
-      !config.authDomain.startsWith('REPLACE_') &&
-      !config.projectId.startsWith('REPLACE_') &&
-      !config.appId.startsWith('REPLACE_')
-    );
+  private setError(): void {
+    this.errorSignal.set('Authentication failed.');
   }
 }

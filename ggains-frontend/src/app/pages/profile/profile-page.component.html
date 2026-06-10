@@ -15,37 +15,42 @@
   <div class="form-grid">
     <label>
       <span>First name</span>
-      <input [ngModel]="form().firstName" (ngModelChange)="updateField('firstName', $event)" />
+      <input required [ngModel]="form().firstName" (ngModelChange)="updateField('firstName', $event)" />
     </label>
 
     <label>
       <span>Last name</span>
-      <input [ngModel]="form().lastName" (ngModelChange)="updateField('lastName', $event)" />
+      <input required [ngModel]="form().lastName" (ngModelChange)="updateField('lastName', $event)" />
     </label>
 
     <label>
       <span>Email</span>
-      <input [ngModel]="form().email" (ngModelChange)="updateField('email', $event)" />
+      <input type="email" required [ngModel]="form().email" (ngModelChange)="updateField('email', $event)" />
     </label>
 
     <label>
       <span>Gender</span>
-      <input [ngModel]="form().gender" (ngModelChange)="updateField('gender', $event)" placeholder="Optional" />
+      <select required [ngModel]="form().gender" (ngModelChange)="updateField('gender', $event)">
+        <option value="" disabled>Select gender</option>
+        @for (gender of genderOptions; track gender) {
+          <option [value]="gender">{{ gender }}</option>
+        }
+      </select>
     </label>
 
     <label>
-      <span>Height ft</span>
-      <input type="number" [ngModel]="form().heightFt" (ngModelChange)="updateNumberField('heightFt', $event)" />
+      <span>Height (ft)</span>
+      <input type="number" min="0" step="1" required [ngModel]="form().heightFt" (ngModelChange)="updateNumberField('heightFt', $event)" />
     </label>
 
     <label>
-      <span>Height in</span>
-      <input type="number" [ngModel]="form().heightIn" (ngModelChange)="updateNumberField('heightIn', $event)" />
+      <span>Height (in)</span>
+      <input type="number" min="0" max="11" step="1" required [ngModel]="form().heightIn" (ngModelChange)="updateNumberField('heightIn', $event)" />
     </label>
 
     <label>
-      <span>Weight</span>
-      <input type="number" [ngModel]="form().weight" (ngModelChange)="updateNumberField('weight', $event)" />
+      <span>Weight (lbs)</span>
+      <input type="number" min="0.1" step="0.1" required [ngModel]="form().weight" (ngModelChange)="updateNumberField('weight', $event)" />
     </label>
   </div>
 

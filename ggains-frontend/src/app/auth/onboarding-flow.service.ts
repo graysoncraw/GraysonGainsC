@@ -33,13 +33,13 @@ export class OnboardingFlowService {
       await this.firebaseAuth.waitUntilReady();
       await this.firebaseAuth.refreshIdToken();
 
-      const snapshot = this.firebaseAuth.snapshot();
-      if (!snapshot) {
+      const user = this.firebaseAuth.user();
+      if (!user) {
         this.session.clearSessionState();
         return this.setRoute('/auth');
       }
 
-      const firebaseUid = snapshot.firebaseUid;
+      const firebaseUid = user.uid;
       const backendUser = await this.loadUser(firebaseUid);
       if (!backendUser) {
         this.session.setBackendUser(null);

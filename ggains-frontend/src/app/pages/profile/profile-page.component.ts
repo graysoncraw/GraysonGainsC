@@ -8,6 +8,7 @@ import { FirebaseAuthService } from '../../auth/firebase-auth.service';
 import { UserApiService, UserProfileRequest } from '../../api/user-api.service';
 
 type ProfileFormState = UserProfileRequest;
+const GENDER_OPTIONS = ['Male', 'Female'] as const;
 
 @Component({
   selector: 'app-profile-page',
@@ -29,6 +30,7 @@ export class ProfilePageComponent {
   protected readonly deleting = signal(false);
   protected readonly error = signal('');
   protected readonly success = signal('');
+  protected readonly genderOptions = GENDER_OPTIONS;
   protected readonly firebaseUid = computed(() => this.session.firebaseUid());
   protected readonly currentUser = computed(() => this.session.backendUser());
   protected readonly onboardingMode = signal(false);
@@ -58,10 +60,10 @@ export class ProfilePageComponent {
       }
 
       if (this.onboardingMode()) {
-        const snapshot = this.firebaseAuth.snapshot();
-        const displayName = snapshot?.displayName?.trim() || '';
+        const firebaseUser = this.firebaseAuth.user();
+        const displayName = firebaseUser?.displayName?.trim() || '';
         const displayParts = displayName.split(/\s+/).filter(Boolean);
-        const fallbackEmail = snapshot?.email || '';
+        const fallbackEmail = firebaseUser?.email || '';
 
         this.form.set({
           firstName: displayParts[0] || fallbackEmail.split('@')[0] || '',
@@ -90,6 +92,12 @@ export class ProfilePageComponent {
   protected async save(): Promise<void> {
     const firebaseUid = this.firebaseUid();
     if (!firebaseUid) {
+      return;
+    }
+
+    const validationError = this.validateForm(this.form());
+    if (validationError) {
+      this.error.set(validationError);
       return;
     }
 
@@ -139,5 +147,57 @@ export class ProfilePageComponent {
     } finally {
       this.deleting.set(false);
     }
+  }
+
+  private validateForm(form: ProfileFormState): string | null {
+    if (!form.firstName.trim()) {
+      return 'First name is required.';
+    }
+
+    if (!form.lastName.trim()) {
+      return 'Last name is required.';
+    }
+
+    if (!form.email.trim()) {
+      return 'Email is required.';
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      return 'Email must be valid.';
+    }
+
+    if (!this.genderOptions.includes(form.gender as (typeof GENDER_OPTIONS)[number])) {
+      return 'Gender is required.';
+    }
+
+    if (!this.isRequiredNumber(form.heightFt)) {
+      return 'Height ft is required.';
+    }
+
+    if (!Number.isInteger(form.heightFt) || form.heightFt < 0) {
+      return 'Height ft must be 0 or greater.';
+    }
+
+    if (!this.isRequiredNumber(form.heightIn)) {
+      return 'Height in is required.';
+    }
+
+    if (!Number.isInteger(form.heightIn) || form.heightIn < 0 || form.heightIn > 11) {
+      return 'Height in must be between 0 and 11.';
+    }
+
+    if (!this.isRequiredNumber(form.weight)) {
+      return 'Weight is required.';
+    }
+
+    if (form.weight <= 0) {
+      return 'Weight must be greater than 0.';
+    }
+
+    return null;
+  }
+
+  private isRequiredNumber(value: number | null): value is number {
+    return typeof value === 'number' && Number.isFinite(value);
   }
 }

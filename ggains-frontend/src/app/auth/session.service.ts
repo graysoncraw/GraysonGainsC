@@ -23,8 +23,7 @@ export class SessionService {
     private readonly userApi: UserApiService,
   ) {
     effect(() => {
-      const snapshot = this.firebaseAuth.snapshot();
-      if (!snapshot) {
+      if (!this.firebaseAuth.user()) {
         this.backendUserSignal.set(null);
         this.statusSignal.set('idle');
         this.messageSignal.set('');
@@ -37,8 +36,8 @@ export class SessionService {
     await this.firebaseAuth.waitUntilReady();
     await this.firebaseAuth.refreshIdToken();
 
-    const snapshot = this.firebaseAuth.snapshot();
-    if (!snapshot) {
+    const user = this.firebaseAuth.user();
+    if (!user) {
       this.backendUserSignal.set(null);
       this.statusSignal.set('idle');
       this.messageSignal.set('');
@@ -46,7 +45,7 @@ export class SessionService {
       return null;
     }
 
-    const bootstrapKey = `${snapshot.firebaseUid}:${snapshot.idToken}`;
+    const bootstrapKey = `${user.uid}:${this.firebaseAuth.idToken()}`;
     if (this.lastBootstrapKeySignal() === bootstrapKey && this.backendUserSignal()) {
       return this.backendUserSignal();
     }
@@ -55,7 +54,7 @@ export class SessionService {
     this.messageSignal.set('');
 
     try {
-      const backendUser = await this.userApi.getUserByFirebaseUid(snapshot.firebaseUid);
+      const backendUser = await this.userApi.getUserByFirebaseUid(user.uid);
 
       this.backendUserSignal.set(backendUser);
       this.statusSignal.set('ready');

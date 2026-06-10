@@ -72,8 +72,7 @@ export class AuthPageComponent {
       }
 
       await this.router.navigateByUrl('/setup/profile');
-    } catch (error) {
-      this.firebaseAuth.reportError(this.formatError(error));
+    } catch {
     } finally {
       this.busy.set(false);
     }
@@ -85,8 +84,7 @@ export class AuthPageComponent {
     try {
       await this.firebaseAuth.signInWithGoogle();
       await this.router.navigateByUrl('/setup/profile');
-    } catch (error) {
-      this.firebaseAuth.reportError(this.formatError(error));
+    } catch {
     } finally {
       this.busy.set(false);
     }
@@ -100,19 +98,5 @@ export class AuthPageComponent {
       email: form.email.trim(),
       password: form.password,
     };
-  }
-
-  private formatError(error: unknown): string {
-    if (error instanceof Error) {
-      const message = error.message || 'Authentication failed.';
-      const code = (error as { code?: string }).code;
-      return code ? `${message} (${code})` : message;
-    }
-
-    if (typeof error === 'string' && error.trim()) {
-      return error;
-    }
-
-    return 'Authentication failed.';
   }
 }

@@ -8,10 +8,10 @@ export interface UserProfileRequest {
   firstName: string;
   lastName: string;
   email: string;
-  gender?: string;
-  heightFt?: number | null;
-  heightIn?: number | null;
-  weight?: number | null;
+  gender: string;
+  heightFt: number | null;
+  heightIn: number | null;
+  weight: number | null;
 }
 
 export interface UserProfileResponse {
