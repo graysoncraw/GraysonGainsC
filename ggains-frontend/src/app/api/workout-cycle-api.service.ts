@@ -10,6 +10,23 @@ export interface CycleProgressRequest {
   liftOutcomes: Record<LiftType, boolean>;
 }
 
+export type DayOfWeek =
+  | 'MONDAY'
+  | 'TUESDAY'
+  | 'WEDNESDAY'
+  | 'THURSDAY'
+  | 'FRIDAY'
+  | 'SATURDAY'
+  | 'SUNDAY';
+
+export interface WorkoutCycleRequest {
+  startDate: string;
+  benchDay: DayOfWeek;
+  squatDay: DayOfWeek;
+  deadliftDay: DayOfWeek;
+  shoulderPressDay: DayOfWeek;
+}
+
 export interface WorkoutCycleResponse {
   id: number;
   firebaseUid: string;
@@ -20,6 +37,10 @@ export interface WorkoutCycleResponse {
   squatTrainingMax: number;
   deadliftTrainingMax: number;
   shoulderPressTrainingMax: number;
+  benchDay: DayOfWeek;
+  squatDay: DayOfWeek;
+  deadliftDay: DayOfWeek;
+  shoulderPressDay: DayOfWeek;
   isActive: boolean;
 }
 
@@ -43,6 +64,14 @@ export interface PrescribedWorkout {
 export class WorkoutCycleApiService {
   constructor(private readonly http: HttpClient) {}
 
+  createWorkoutCycle(firebaseUid: string, workoutCycleRequest: WorkoutCycleRequest): Promise<WorkoutCycleResponse> {
+    return firstValueFrom(this.http.post<WorkoutCycleResponse>(`${BACKEND_API_BASE_URL}/api/users/${firebaseUid}/cycles`, workoutCycleRequest));
+  }
+
+  getWorkoutCycle(firebaseUid: string): Promise<WorkoutCycleResponse> {
+    return firstValueFrom(this.http.get<WorkoutCycleResponse>(`${BACKEND_API_BASE_URL}/api/users/${firebaseUid}/cycles`));
+  }
+
   getActiveCycle(firebaseUid: string): Promise<WorkoutCycleResponse> {
     return firstValueFrom(this.http.get<WorkoutCycleResponse>(`${BACKEND_API_BASE_URL}/api/users/${firebaseUid}/cycles/active`));
   }
@@ -62,6 +91,12 @@ export class WorkoutCycleApiService {
   progressToNextCycle(firebaseUid: string, request: CycleProgressRequest): Promise<WorkoutCycleResponse> {
     return firstValueFrom(
       this.http.post<WorkoutCycleResponse>(`${BACKEND_API_BASE_URL}/api/users/${firebaseUid}/cycles/progress`, request),
+    );
+  }
+
+  updateActiveWorkoutCycle(firebaseUid: string, request: WorkoutCycleRequest): Promise<WorkoutCycleResponse> {
+    return firstValueFrom(
+      this.http.put<WorkoutCycleResponse>(`${BACKEND_API_BASE_URL}/api/users/${firebaseUid}/cycles`, request),
     );
   }
 }

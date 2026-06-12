@@ -12,6 +12,56 @@
     <div class="status-banner success">{{ success() }}</div>
   }
 
+  <div class="form-grid three-up">
+    <label>
+      <span>Cycle start date</span>
+      <input type="date" [ngModel]="form().startDate" (ngModelChange)="updateField('startDate', $event)" />
+    </label>
+
+    <label>
+      <span>Bench day</span>
+      <select [ngModel]="form().benchDay" (ngModelChange)="updateField('benchDay', $event)">
+        @for (day of days; track day) {
+          <option [value]="day">{{ day }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      <span>Squat day</span>
+      <select [ngModel]="form().squatDay" (ngModelChange)="updateField('squatDay', $event)">
+        @for (day of days; track day) {
+          <option [value]="day">{{ day }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      <span>Deadlift day</span>
+      <select [ngModel]="form().deadliftDay" (ngModelChange)="updateField('deadliftDay', $event)">
+        @for (day of days; track day) {
+          <option [value]="day">{{ day }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      <span>Shoulder press day</span>
+      <select [ngModel]="form().shoulderPressDay" (ngModelChange)="updateField('shoulderPressDay', $event)">
+        @for (day of days; track day) {
+          <option [value]="day">{{ day }}</option>
+        }
+      </select>
+    </label>
+  </div>
+
+  <div class="button-row">
+    <button type="button" class="primary-button" [disabled]="loading()" (click)="saveSchedule()">
+      {{ loading() ? 'Saving...' : 'Save schedule' }}
+    </button>
+  </div>
+
+  @if (!onboardingMode()) {
   <div class="two-column">
     <article class="panel">
       <div class="section-heading compact">
@@ -105,4 +155,5 @@
       <p class="subtle-text">No cycle history returned yet.</p>
     }
   </article>
+}
 </section>

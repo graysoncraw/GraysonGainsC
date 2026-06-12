@@ -42,6 +42,30 @@ export class FirebaseAuthService {
     this.bootstrap();
   }
 
+  private bootstrap(): void {
+    const config = FIREBASE_WEB_CONFIG;
+    const auth = getAuth(initializeApp(config));
+    this.authSignal.set(auth);
+
+    if (this.authStateUnsubscribe) {
+      this.authStateUnsubscribe();
+    }
+
+    this.authStateUnsubscribe = onAuthStateChanged(auth, async (user) => {
+      try {
+        if (user) {
+          await this.syncUserState(user, false);
+        } else {
+          this.clearUserState();
+        }
+      } catch (error) {
+        this.setError();
+      } finally {
+        this.markReady();
+      }
+    });
+  }
+
   async signUpWithEmail(email: string, password: string, displayName?: string): Promise<void> {
     const auth = this.ensureAuth();
     this.clearError();
@@ -116,30 +140,6 @@ export class FirebaseAuthService {
     }
 
     await this.readyPromise;
-  }
-
-  private bootstrap(): void {
-    const config = FIREBASE_WEB_CONFIG;
-    const auth = getAuth(initializeApp(config));
-    this.authSignal.set(auth);
-
-    if (this.authStateUnsubscribe) {
-      this.authStateUnsubscribe();
-    }
-
-    this.authStateUnsubscribe = onAuthStateChanged(auth, async (user) => {
-      try {
-        if (user) {
-          await this.syncUserState(user, false);
-        } else {
-          this.clearUserState();
-        }
-      } catch (error) {
-        this.setError();
-      } finally {
-        this.markReady();
-      }
-    });
   }
 
   private async syncUserState(user: User, forceRefresh: boolean): Promise<void> {

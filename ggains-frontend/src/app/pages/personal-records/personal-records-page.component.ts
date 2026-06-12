@@ -117,35 +117,7 @@ export class PersonalRecordsPageComponent {
       this.loading.set(false);
     }
   }
-
-  protected async updateSpecificLift(): Promise<void> {
-    const firebaseUid = this.firebaseUid();
-    if (!firebaseUid) {
-      return;
-    }
-
-    this.loading.set(true);
-    this.error.set('');
-    this.success.set('');
-
-    try {
-      const lift = this.patchLift();
-      const record = await this.personalRecordApi.updateSpecificPr(firebaseUid, lift, this.patchValue());
-      this.record.set(record);
-      this.form.set({
-        benchPressPR: record.benchPressPR,
-        squatPR: record.squatPR,
-        deadliftPR: record.deadliftPR,
-        shoulderPressPR: record.shoulderPressPR,
-      });
-      this.success.set('Single lift updated.');
-    } catch (error) {
-      this.error.set(error instanceof Error ? error.message : 'Unable to update single lift.');
-    } finally {
-      this.loading.set(false);
-    }
-  }
-
+  
   private isNotFound(error: unknown): boolean {
     return Boolean(error && typeof error === 'object' && 'status' in error && (error as { status?: number }).status === 404);
   }

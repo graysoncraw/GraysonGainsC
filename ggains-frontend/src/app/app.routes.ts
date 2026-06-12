@@ -11,7 +11,6 @@ import { PersonalRecordsPageComponent } from './pages/personal-records/personal-
 import { ProfilePageComponent } from './pages/profile/profile-page.component';
 import { SetupFinishPageComponent } from './pages/setup/setup-finish-page.component';
 import { SetupShellComponent } from './pages/setup/setup-shell.component';
-import { SchedulePageComponent } from './pages/schedule/schedule-page.component';
 import { SettingsPageComponent } from './pages/settings/settings-page.component';
 
 export const routes: Routes = [
@@ -46,8 +45,8 @@ export const routes: Routes = [
         data: { onboarding: true },
       },
       {
-        path: 'schedule',
-        component: SchedulePageComponent,
+        path: 'cycles',
+        component: CyclesPageComponent,
         data: { onboarding: true },
       },
       {
@@ -74,10 +73,6 @@ export const routes: Routes = [
       {
         path: 'personal-records',
         component: PersonalRecordsPageComponent,
-      },
-      {
-        path: 'schedule',
-        component: SchedulePageComponent,
       },
       {
         path: 'cycles',

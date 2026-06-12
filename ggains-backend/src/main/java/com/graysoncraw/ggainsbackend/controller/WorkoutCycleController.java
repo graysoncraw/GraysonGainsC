@@ -1,25 +1,26 @@
 package com.graysoncraw.ggainsbackend.controller;
 
+import com.graysoncraw.ggainsbackend.dto.personalrecord.PersonalRecordRequestDTO;
+import com.graysoncraw.ggainsbackend.dto.personalrecord.PersonalRecordResponseDTO;
 import com.graysoncraw.ggainsbackend.dto.workoutcycle.CycleProgressRequestDTO;
 import com.graysoncraw.ggainsbackend.dto.workoutcycle.PrescribedWorkoutDTO;
+import com.graysoncraw.ggainsbackend.dto.workoutcycle.WorkoutCycleRequestDTO;
 import com.graysoncraw.ggainsbackend.dto.workoutcycle.WorkoutCycleResponseDTO;
 import com.graysoncraw.ggainsbackend.mapper.WorkoutCycleMapper;
+import com.graysoncraw.ggainsbackend.model.PersonalRecord;
 import com.graysoncraw.ggainsbackend.model.WorkoutCycle;
 import com.graysoncraw.ggainsbackend.security.AuthenticatedUserGuard;
 import com.graysoncraw.ggainsbackend.service.WorkoutCycleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/api/users/{firebaseUid}/cycles")
@@ -29,6 +30,33 @@ public class WorkoutCycleController {
     private final WorkoutCycleService workoutCycleService;
     private final WorkoutCycleMapper workoutCycleMapper;
     private final AuthenticatedUserGuard authenticatedUserGuard;
+
+    @PostMapping
+    public ResponseEntity<WorkoutCycleResponseDTO> createWorkoutCycle(
+            @PathVariable String firebaseUid,
+            @Valid @RequestBody WorkoutCycleRequestDTO request
+    ) {
+        authenticatedUserGuard.requireUidMatches(firebaseUid);
+        WorkoutCycle workoutCycle = workoutCycleMapper.toEntity(request);
+
+        WorkoutCycle createdCycle = workoutCycleService.createFirstCycle(firebaseUid, workoutCycle);
+        return ResponseEntity.status(HttpStatus.CREATED).body(workoutCycleMapper.toResponse(createdCycle));
+    }
+
+    @PutMapping
+    public WorkoutCycleResponseDTO updateActiveWorkoutCycle(
+            @PathVariable String firebaseUid,
+            @Valid @RequestBody WorkoutCycleRequestDTO request
+    ) {
+        authenticatedUserGuard.requireUidMatches(firebaseUid);
+        WorkoutCycle existingRecord = workoutCycleService.getActiveCycle(firebaseUid);
+        WorkoutCycle workoutCycle = workoutCycleMapper.toEntity(request);
+        workoutCycle.setId(existingRecord.getId());
+        workoutCycle.setUser(existingRecord.getUser());
+
+        WorkoutCycle updatedRecord = workoutCycleService.updateActiveWorkoutCycle(workoutCycle);
+        return workoutCycleMapper.toResponse(updatedRecord);
+    }
 
     @GetMapping("/active")
     public WorkoutCycleResponseDTO getActiveCycle(@PathVariable String firebaseUid) {

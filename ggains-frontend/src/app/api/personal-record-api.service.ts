@@ -37,14 +37,4 @@ export class PersonalRecordApiService {
       this.http.put<PersonalRecordResponse>(`${BACKEND_API_BASE_URL}/api/users/${firebaseUid}/personal-record`, request),
     );
   }
-
-  updateSpecificPr(firebaseUid: string, liftType: string, newPR: number): Promise<PersonalRecordResponse> {
-    return firstValueFrom(
-      this.http.patch<PersonalRecordResponse>(
-        `${BACKEND_API_BASE_URL}/api/users/${firebaseUid}/personal-record/${liftType}`,
-        null,
-        { params: { newPR } },
-      ),
-    );
-  }
 }

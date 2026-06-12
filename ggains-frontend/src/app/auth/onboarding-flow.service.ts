@@ -3,11 +3,10 @@ import { Injectable, computed, signal } from '@angular/core';
 import { PersonalRecordApiService } from '../api/personal-record-api.service';
 import { WorkoutCycleApiService } from '../api/workout-cycle-api.service';
 import { UserApiService, UserProfileResponse } from '../api/user-api.service';
-import { WorkoutScheduleApiService } from '../api/workout-schedule-api.service';
 import { FirebaseAuthService } from './firebase-auth.service';
 import { SessionService } from './session.service';
 
-export type OnboardingRoute = '/auth' | '/setup/profile' | '/setup/personal-records' | '/setup/schedule' | '/setup/finish' | '/app';
+export type OnboardingRoute = '/auth' | '/setup/profile' | '/setup/personal-records' | '/setup/cycles' | '/setup/finish' | '/app';
 
 @Injectable({ providedIn: 'root' })
 export class OnboardingFlowService {
@@ -22,7 +21,6 @@ export class OnboardingFlowService {
     private readonly session: SessionService,
     private readonly userApi: UserApiService,
     private readonly personalRecordApi: PersonalRecordApiService,
-    private readonly workoutScheduleApi: WorkoutScheduleApiService,
     private readonly workoutCycleApi: WorkoutCycleApiService,
   ) {}
 
@@ -52,8 +50,8 @@ export class OnboardingFlowService {
         return this.setRoute('/setup/personal-records');
       }
 
-      if (!(await this.exists(() => this.workoutScheduleApi.getWorkoutSchedule(firebaseUid)))) {
-        return this.setRoute('/setup/schedule');
+      if (!(await this.exists(() => this.workoutCycleApi.getActiveCycle(firebaseUid)))) {
+        return this.setRoute('/setup/cycles');
       }
 
       if (!(await this.exists(() => this.workoutCycleApi.getActiveCycle(firebaseUid)))) {

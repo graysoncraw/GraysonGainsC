@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -56,6 +57,26 @@ public class WorkoutCycle {
     @NotNull(message = "Shoulder press training max is required")
     @Min(value = 0, message = "Shoulder press training max must be positive")
     private Double shoulderPressTrainingMax;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "bench_day", nullable = false)
+    @NotNull(message = "Bench day is required")
+    private DayOfWeek benchDay;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "squat_day", nullable = false)
+    @NotNull(message = "Squat day is required")
+    private DayOfWeek squatDay;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "deadlift_day", nullable = false)
+    @NotNull(message = "Deadlift day is required")
+    private DayOfWeek deadliftDay;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "shoulder_press_day", nullable = false)
+    @NotNull(message = "Shoulder press day is required")
+    private DayOfWeek shoulderPressDay;
 
     @Column(name = "is_active", nullable = false)
     @NotNull(message = "Active status is required")

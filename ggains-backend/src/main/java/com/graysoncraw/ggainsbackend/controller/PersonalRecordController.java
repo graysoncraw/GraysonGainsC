@@ -66,15 +66,4 @@ public class PersonalRecordController {
         PersonalRecord updatedRecord = personalRecordService.updatePersonalRecord(personalRecord);
         return personalRecordMapper.toResponse(updatedRecord);
     }
-
-    @PatchMapping("/{liftType}")
-    public PersonalRecordResponseDTO updateSpecificPr(
-            @PathVariable String firebaseUid,
-            @PathVariable String liftType,
-            @RequestParam Double newPR
-    ) {
-        authenticatedUserGuard.requireUidMatches(firebaseUid);
-        PersonalRecord updatedRecord = personalRecordService.updateSpecificPR(firebaseUid, liftType, newPR);
-        return personalRecordMapper.toResponse(updatedRecord);
-    }
 }

@@ -13,7 +13,6 @@ public interface UserMapper {
             @Mapping(target = "firebaseUid", ignore = true),
             @Mapping(target = "dateCreated", ignore = true),
             @Mapping(target = "personalRecord", ignore = true),
-            @Mapping(target = "workoutSchedule", ignore = true),
             @Mapping(target = "workoutCycles", ignore = true),
             @Mapping(target = "workoutSessions", ignore = true)
     })

@@ -39,33 +39,4 @@
       {{ loading() ? 'Saving...' : 'Save all PRs' }}
     </button>
   </div>
-  @if (!onboardingMode()) {
-  <article class="panel nested-panel">
-    <div class="section-heading compact">
-      <p>Quick update</p>
-      <h3>Patch one lift only</h3>
-    </div>
-
-    <div class="form-grid three-up">
-      <label>
-        <span>Lift</span>
-        <select [ngModel]="patchLift()" (ngModelChange)="patchLift.set($event)">
-          <option value="benchPressPR">Bench press</option>
-          <option value="squatPR">Squat</option>
-          <option value="deadliftPR">Deadlift</option>
-          <option value="shoulderPressPR">Shoulder press</option>
-        </select>
-      </label>
-
-      <label>
-        <span>New PR</span>
-        <input type="number" [ngModel]="patchValue()" (ngModelChange)="patchValue.set($event)" />
-      </label>
-    </div>
-
-    <div class="button-row">
-      <button type="button" class="secondary-button" [disabled]="loading()" (click)="updateSpecificLift()">Patch lift</button>
-    </div>
-  </article>
-  }
 </section>

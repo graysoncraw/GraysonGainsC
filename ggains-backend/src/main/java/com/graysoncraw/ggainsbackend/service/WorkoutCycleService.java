@@ -7,11 +7,9 @@ import com.graysoncraw.ggainsbackend.model.LiftType;
 import com.graysoncraw.ggainsbackend.model.PersonalRecord;
 import com.graysoncraw.ggainsbackend.model.User;
 import com.graysoncraw.ggainsbackend.model.WorkoutCycle;
-import com.graysoncraw.ggainsbackend.model.WorkoutSchedule;
 import com.graysoncraw.ggainsbackend.repository.PersonalRecordRepository;
 import com.graysoncraw.ggainsbackend.repository.UserRepository;
 import com.graysoncraw.ggainsbackend.repository.WorkoutCycleRepository;
-import com.graysoncraw.ggainsbackend.repository.WorkoutScheduleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +29,6 @@ public class WorkoutCycleService {
 
     private final WorkoutCycleRepository workoutCycleRepository;
     private final PersonalRecordRepository personalRecordRepository;
-    private final WorkoutScheduleRepository workoutScheduleRepository;
     private final UserRepository userRepository;
 
     private static final double[][] WEEK_PERCENTAGES = {
@@ -48,7 +45,7 @@ public class WorkoutCycleService {
             {5, 5, 5}   // Week 4 Deload (no + sets)
     };
 
-    public WorkoutCycle createFirstCycle(String firebaseUid) {
+    public WorkoutCycle createFirstCycle(String firebaseUid, WorkoutCycle workoutCycle) {
         if (!workoutCycleRepository.findByUser_FirebaseUid(firebaseUid).isEmpty()) {
             throw new IllegalStateException("First cycle already exists for user");
         }
@@ -59,15 +56,12 @@ public class WorkoutCycleService {
         PersonalRecord pr = personalRecordRepository.findByUser_FirebaseUid(firebaseUid)
                 .orElseThrow(() -> new NoSuchElementException("Personal records not found for user"));
 
-        WorkoutSchedule schedule = workoutScheduleRepository.findByUser_FirebaseUid(firebaseUid)
-                .orElseThrow(() -> new NoSuchElementException("Workout schedule not found for user"));
+        double benchTM = calcTrainingMax(pr.getBenchPressPR());
+        double squatTM = calcTrainingMax(pr.getSquatPR());
+        double deadliftTM = calcTrainingMax(pr.getDeadliftPR());
+        double shoulderPressTM = calcTrainingMax(pr.getShoulderPressPR());
 
-        double benchTM = roundToNearest5(pr.getBenchPressPR() * 0.90);
-        double squatTM = roundToNearest5(pr.getSquatPR() * 0.90);
-        double deadliftTM = roundToNearest5(pr.getDeadliftPR() * 0.90);
-        double shoulderPressTM = roundToNearest5(pr.getShoulderPressPR() * 0.90);
-
-        LocalDate startDate = schedule.getCycleStartDate();
+        LocalDate startDate = workoutCycle.getStartDate();
         LocalDate endDate = startDate.plusWeeks(4);
 
         deactivateAllCycles(firebaseUid);
@@ -81,6 +75,10 @@ public class WorkoutCycleService {
                 .squatTrainingMax(squatTM)
                 .deadliftTrainingMax(deadliftTM)
                 .shoulderPressTrainingMax(shoulderPressTM)
+                .benchDay(workoutCycle.getBenchDay())
+                .squatDay(workoutCycle.getSquatDay())
+                .deadliftDay(workoutCycle.getDeadliftDay())
+                .shoulderPressDay(workoutCycle.getShoulderPressDay())
                 .isActive(true)
                 .build();
 
@@ -102,16 +100,13 @@ public class WorkoutCycleService {
             throw new IllegalStateException("Current cycle has expired. Please progress to the next cycle.");
         }
 
-        WorkoutSchedule schedule = workoutScheduleRepository.findByUser_FirebaseUid(firebaseUid)
-                .orElseThrow(() -> new NoSuchElementException("Workout schedule not found"));
-
         int weekNumber = calculateWeekNumber(cycle.getStartDate(), date);
 
         if (weekNumber > 4) {
             throw new IllegalStateException("Current cycle has expired. Please progress to the next cycle.");
         }
 
-        LiftType todaysLift = getLiftForDay(schedule, date.getDayOfWeek());
+        LiftType todaysLift = getLiftForDay(cycle, date.getDayOfWeek());
 
         if (todaysLift == null) {
             throw new IllegalArgumentException("No lift scheduled for " + date.getDayOfWeek());
@@ -133,6 +128,9 @@ public class WorkoutCycleService {
 
     public WorkoutCycle progressToNextCycle(String firebaseUid, CycleProgressRequestDTO request) {
         WorkoutCycle currentCycle = getActiveCycle(firebaseUid);
+
+        PersonalRecord pr = personalRecordRepository.findByUser_FirebaseUid(firebaseUid)
+                .orElseThrow(() -> new NoSuchElementException("Personal records not found for user"));
 
         User user = userRepository.findById(firebaseUid)
                 .orElseThrow(() -> new NoSuchElementException("User not found"));
@@ -185,6 +183,20 @@ public class WorkoutCycleService {
         return workoutCycleRepository.findByUser_FirebaseUidOrderByCycleNumberDesc(firebaseUid);
     }
 
+    // For when a user hits a new PR
+    public WorkoutCycle updateActiveWorkoutCycle(WorkoutCycle workoutCycle) {
+        if (!workoutCycleRepository.existsById(workoutCycle.getId())) {
+            throw new NoSuchElementException("Workout cycle with ID " + workoutCycle.getId() + " not found");
+        }
+        var t = getActiveCycle(workoutCycle.getUser().getFirebaseUid());
+        t.setStartDate(workoutCycle.getStartDate());
+        t.setBenchDay(workoutCycle.getBenchDay());
+        t.setSquatDay(workoutCycle.getSquatDay());
+        t.setDeadliftDay(workoutCycle.getDeadliftDay());
+        t.setShoulderPressDay(workoutCycle.getShoulderPressDay());
+        return workoutCycleRepository.save(t);
+    }
+
     // ==================== Helper Methods ====================
 
     private void deactivateAllCycles(String firebaseUid) {
@@ -202,11 +214,11 @@ public class WorkoutCycleService {
         return (int) (daysBetween / 7) + 1;
     }
 
-    private LiftType getLiftForDay(WorkoutSchedule schedule, DayOfWeek dayOfWeek) {
-        if (schedule.getBenchDay() == dayOfWeek) return LiftType.BENCH;
-        if (schedule.getSquatDay() == dayOfWeek) return LiftType.SQUAT;
-        if (schedule.getDeadliftDay() == dayOfWeek) return LiftType.DEADLIFT;
-        if (schedule.getShoulderPressDay() == dayOfWeek) return LiftType.SHOULDER_PRESS;
+    private LiftType getLiftForDay(WorkoutCycle cycle, DayOfWeek dayOfWeek) {
+        if (cycle.getBenchDay() == dayOfWeek) return LiftType.BENCH;
+        if (cycle.getSquatDay() == dayOfWeek) return LiftType.SQUAT;
+        if (cycle.getDeadliftDay() == dayOfWeek) return LiftType.DEADLIFT;
+        if (cycle.getShoulderPressDay() == dayOfWeek) return LiftType.SHOULDER_PRESS;
         return null;
     }
 
@@ -251,6 +263,10 @@ public class WorkoutCycleService {
 
     private double roundToNearest5(double weight) {
         return Math.round(weight / 5) * 5;
+    }
+
+    public double calcTrainingMax(double weight) {
+        return roundToNearest5(weight * 0.90);
     }
 
     private Map<LiftType, Boolean> validateAndExtractOutcomes(CycleProgressRequestDTO request) {
