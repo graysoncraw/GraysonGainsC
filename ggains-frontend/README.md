@@ -1,59 +1,102 @@
-# GgainsFrontend
+# GraysonGains Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.0.0.
+Angular 22 frontend for GraysonGains. This app handles authentication, onboarding, the main training shell, and all API calls to the Spring backend.
 
-## Development server
+## What this frontend does
 
-To start a local development server, run:
+- Signs users in with Firebase email/password or Google.
+- Waits for Firebase auth state to restore after reload.
+- Loads the backend user profile and keeps it in session state.
+- Walks the user through onboarding:
+  - profile
+  - personal records
+  - workout cycle setup
+  - finish
+- Shows the main app shell with dashboard, profile, PRs, cycles, and settings.
+- Sends Firebase ID tokens to the backend on every protected API request.
 
-```bash
-ng serve
-```
+## Local development
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+From `ggains-frontend/`:
 
 ```bash
-ng generate --help
+npm install
+npm start
 ```
 
-## Building
+Open `http://localhost:4200/`.
 
-To build the project run:
+Other useful scripts:
 
 ```bash
-ng build
+npm run build
+npm test
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Required configuration
 
-## Running unit tests
+Edit `src/app/auth/app-config.ts` before running the app locally.
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+- `BACKEND_API_BASE_URL` should point to the Spring backend, usually `http://localhost:8080`
+- `FIREBASE_WEB_CONFIG` must match your Firebase web app configuration
 
-```bash
-ng test
-```
+If Firebase config is missing or still contains placeholders, auth initialization will fail and the app will not be able to authenticate.
 
-## Running end-to-end tests
+## Main routes
 
-For end-to-end (e2e) testing, run:
+- `/auth` - login and signup
+- `/setup/profile` - create the backend user profile
+- `/setup/personal-records` - enter PRs
+- `/setup/cycles` - configure the training cycle
+- `/setup/finish` - final onboarding handoff
+- `/app` - main dashboard shell
+- `/app/profile` - edit profile data
+- `/app/personal-records` - edit personal records
+- `/app/cycles` - view and progress the training cycle
+- `/app/settings` - session tools and user lookup
 
-```bash
-ng e2e
-```
+## How the frontend is structured
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+### Auth flow
 
-## Additional Resources
+`FirebaseAuthService` is the core auth wrapper. It:
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- initializes Firebase Auth
+- listens for `onAuthStateChanged`
+- keeps the current Firebase `User` in memory
+- keeps the current ID token in memory
+- exposes `ready`, `user`, `firebaseUid`, `idToken`, and `error`
+
+The auth page uses that service directly, and the route guards wait for Firebase to finish restoring state before deciding where to send the user.
+
+### Session flow
+
+`SessionService` loads the backend user record for the current Firebase UID and stores it in memory. It also tracks session status so the shell and settings screen can show whether the backend profile is loading, ready, or errored.
+
+### Onboarding flow
+
+`OnboardingFlowService` decides which setup step the user should see next by checking:
+
+1. Firebase auth state
+2. backend user profile
+3. personal record presence
+4. workout cycle presence
+
+This is used by the setup and app guards so users land on the correct screen automatically.
+
+### API layer
+
+The API services are thin wrappers around `HttpClient`:
+
+- `UserApiService`
+- `PersonalRecordApiService`
+- `WorkoutCycleApiService`
+
+### Auth token interceptor
+
+`authTokenInterceptor` adds `Authorization: Bearer <Firebase ID token>` to backend requests. That is how the Spring backend knows which Firebase user is making the request.
+
+## Notes
+
+- Auth state lives in memory only now. Refreshing the page lets Firebase restore the session, but the app no longer depends on localStorage snapshots.
+- The frontend is intentionally split into auth, session, onboarding, API, and page components so the flow stays easy to reason about.
