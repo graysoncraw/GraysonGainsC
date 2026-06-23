@@ -14,7 +14,6 @@ public interface UserMapper {
             @Mapping(target = "dateCreated", ignore = true),
             @Mapping(target = "personalRecord", ignore = true),
             @Mapping(target = "workoutCycles", ignore = true),
-            @Mapping(target = "workoutSessions", ignore = true)
     })
     User toEntity(UserRequestDTO request);
 

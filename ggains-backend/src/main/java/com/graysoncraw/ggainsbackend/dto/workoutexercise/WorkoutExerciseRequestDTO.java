@@ -1,4 +1,4 @@
-package com.graysoncraw.ggainsbackend.dto.workoutsession;
+package com.graysoncraw.ggainsbackend.dto.workoutexercise;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;

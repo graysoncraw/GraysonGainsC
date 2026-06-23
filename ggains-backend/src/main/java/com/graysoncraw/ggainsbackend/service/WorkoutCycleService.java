@@ -2,7 +2,6 @@ package com.graysoncraw.ggainsbackend.service;
 
 import com.graysoncraw.ggainsbackend.dto.workoutcycle.PrescribedSetDTO;
 import com.graysoncraw.ggainsbackend.dto.workoutcycle.PrescribedWorkoutDTO;
-import com.graysoncraw.ggainsbackend.dto.workoutcycle.WorkoutCycleOutcomeRequestDTO;
 import com.graysoncraw.ggainsbackend.model.LiftType;
 import com.graysoncraw.ggainsbackend.model.PersonalRecord;
 import com.graysoncraw.ggainsbackend.model.User;
@@ -126,15 +125,6 @@ public class WorkoutCycleService {
         workout.setIsDeload(weekNumber == 4);
 
         return workout;
-    }
-
-    public WorkoutCycle updateActiveCycleOutcomes(String firebaseUid, WorkoutCycleOutcomeRequestDTO request) {
-        WorkoutCycle activeCycle = getActiveCycle(firebaseUid);
-        activeCycle.setBenchCompleted(request.getBenchCompleted());
-        activeCycle.setSquatCompleted(request.getSquatCompleted());
-        activeCycle.setDeadliftCompleted(request.getDeadliftCompleted());
-        activeCycle.setShoulderPressCompleted(request.getShoulderPressCompleted());
-        return workoutCycleRepository.save(activeCycle);
     }
 
     public WorkoutCycle progressToNextCycle(String firebaseUid) {

@@ -1,7 +1,5 @@
 package com.graysoncraw.ggainsbackend.service;
 
-import com.graysoncraw.ggainsbackend.dto.workoutcycle.WorkoutCycleOutcomeRequestDTO;
-import com.graysoncraw.ggainsbackend.model.LiftType;
 import com.graysoncraw.ggainsbackend.model.PersonalRecord;
 import com.graysoncraw.ggainsbackend.model.User;
 import com.graysoncraw.ggainsbackend.model.WorkoutCycle;
@@ -93,45 +91,6 @@ class WorkoutCycleServiceTest {
         ));
         verify(workoutCycleRepository).save(currentCycle);
         verify(workoutCycleRepository).save(nextCycle);
-    }
-
-    @Test
-    void updateActiveCycleOutcomesPersistsTheFlagsOnTheCurrentCycle() {
-        String firebaseUid = "uid-123";
-        User user = User.builder().firebaseUid(firebaseUid).build();
-        WorkoutCycle currentCycle = WorkoutCycle.builder()
-                .id(4L)
-                .user(user)
-                .cycleNumber(2)
-                .startDate(LocalDate.of(2026, 4, 1))
-                .endDate(LocalDate.of(2026, 4, 29))
-                .benchTrainingMax(200.0)
-                .squatTrainingMax(300.0)
-                .deadliftTrainingMax(350.0)
-                .shoulderPressTrainingMax(120.0)
-                .benchCompleted(false)
-                .squatCompleted(false)
-                .deadliftCompleted(false)
-                .shoulderPressCompleted(false)
-                .isActive(true)
-                .build();
-
-        WorkoutCycleOutcomeRequestDTO request = new WorkoutCycleOutcomeRequestDTO();
-        request.setBenchCompleted(true);
-        request.setSquatCompleted(false);
-        request.setDeadliftCompleted(true);
-        request.setShoulderPressCompleted(false);
-
-        when(workoutCycleRepository.findByUser_FirebaseUidAndIsActiveTrue(firebaseUid)).thenReturn(Optional.of(currentCycle));
-        when(workoutCycleRepository.save(any(WorkoutCycle.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        WorkoutCycle updated = workoutCycleService.updateActiveCycleOutcomes(firebaseUid, request);
-
-        assertEquals(true, updated.getBenchCompleted());
-        assertEquals(false, updated.getSquatCompleted());
-        assertEquals(true, updated.getDeadliftCompleted());
-        assertEquals(false, updated.getShoulderPressCompleted());
-        verify(workoutCycleRepository).save(currentCycle);
     }
 
     @Test

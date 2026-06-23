@@ -1,13 +1,9 @@
 package com.graysoncraw.ggainsbackend.controller;
 
-import com.graysoncraw.ggainsbackend.dto.personalrecord.PersonalRecordRequestDTO;
-import com.graysoncraw.ggainsbackend.dto.personalrecord.PersonalRecordResponseDTO;
 import com.graysoncraw.ggainsbackend.dto.workoutcycle.PrescribedWorkoutDTO;
-import com.graysoncraw.ggainsbackend.dto.workoutcycle.WorkoutCycleOutcomeRequestDTO;
 import com.graysoncraw.ggainsbackend.dto.workoutcycle.WorkoutCycleRequestDTO;
 import com.graysoncraw.ggainsbackend.dto.workoutcycle.WorkoutCycleResponseDTO;
 import com.graysoncraw.ggainsbackend.mapper.WorkoutCycleMapper;
-import com.graysoncraw.ggainsbackend.model.PersonalRecord;
 import com.graysoncraw.ggainsbackend.model.WorkoutCycle;
 import com.graysoncraw.ggainsbackend.security.AuthenticatedUserGuard;
 import com.graysoncraw.ggainsbackend.service.WorkoutCycleService;
@@ -20,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/api/users/{firebaseUid}/cycles")
@@ -56,16 +51,6 @@ public class WorkoutCycleController {
 
         WorkoutCycle updatedRecord = workoutCycleService.updateActiveWorkoutCycle(workoutCycle);
         return workoutCycleMapper.toResponse(updatedRecord);
-    }
-
-    @PutMapping("/active/outcomes")
-    public WorkoutCycleResponseDTO updateActiveCycleOutcomes(
-            @PathVariable String firebaseUid,
-            @Valid @RequestBody WorkoutCycleOutcomeRequestDTO request
-    ) {
-        authenticatedUserGuard.requireUidMatches(firebaseUid);
-        WorkoutCycle updatedCycle = workoutCycleService.updateActiveCycleOutcomes(firebaseUid, request);
-        return workoutCycleMapper.toResponse(updatedCycle);
     }
 
     @GetMapping("/active")

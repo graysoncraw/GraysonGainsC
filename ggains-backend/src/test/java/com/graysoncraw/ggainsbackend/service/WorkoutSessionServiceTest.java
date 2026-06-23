@@ -1,6 +1,6 @@
 package com.graysoncraw.ggainsbackend.service;
 
-import com.graysoncraw.ggainsbackend.dto.workoutsession.WorkoutExerciseRequestDTO;
+import com.graysoncraw.ggainsbackend.dto.workoutexercise.WorkoutExerciseRequestDTO;
 import com.graysoncraw.ggainsbackend.dto.workoutsession.WorkoutSessionRequestDTO;
 import com.graysoncraw.ggainsbackend.model.LiftType;
 import com.graysoncraw.ggainsbackend.model.User;
@@ -77,9 +77,8 @@ class WorkoutSessionServiceTest {
         request.setExercises(List.of(mainSet, accessorySet));
 
         when(userRepository.findById(firebaseUid)).thenReturn(Optional.of(user));
-        when(workoutCycleRepository.findFirstByUser_FirebaseUidAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByCycleNumberDesc(
+        when(workoutCycleRepository.findActiveCycleForDate(
                 firebaseUid,
-                request.getDate(),
                 request.getDate()
         )).thenReturn(Optional.of(cycle));
         when(workoutSessionRepository.findByUser_FirebaseUidAndDate(firebaseUid, request.getDate())).thenReturn(Optional.empty());
@@ -91,8 +90,6 @@ class WorkoutSessionServiceTest {
         assertEquals(44L, response.getWorkoutCycleId());
         assertEquals(3, response.getCycleNumber());
         assertEquals(2, response.getWeekNumber());
-        assertEquals(2, response.getExercises().size());
-        assertFalse(response.getExercises().get(1).getIsMainLift());
     }
 
     @Test
@@ -145,18 +142,15 @@ class WorkoutSessionServiceTest {
         request.setExercises(List.of(updatedMainSet));
 
         when(userRepository.findById(firebaseUid)).thenReturn(Optional.of(user));
-        when(workoutCycleRepository.findFirstByUser_FirebaseUidAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByCycleNumberDesc(
+        when(workoutCycleRepository.findActiveCycleForDate(
                 firebaseUid,
-                request.getDate(),
-                request.getDate()
-        )).thenReturn(Optional.of(cycle));
+                request.getDate())
+        ).thenReturn(Optional.of(cycle));
         when(workoutSessionRepository.findByUser_FirebaseUidAndDate(firebaseUid, request.getDate())).thenReturn(Optional.of(existingSession));
         when(workoutSessionRepository.save(any(WorkoutSession.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         var response = workoutSessionService.upsertWorkoutSession(firebaseUid, request);
 
-        assertEquals(1, response.getExercises().size());
-        assertEquals("Bench Press", response.getExercises().get(0).getExerciseName());
         assertEquals("Updated", response.getNotes());
     }
 

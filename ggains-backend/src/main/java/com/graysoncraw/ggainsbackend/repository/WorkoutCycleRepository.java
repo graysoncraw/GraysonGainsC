@@ -3,6 +3,8 @@ package com.graysoncraw.ggainsbackend.repository;
 import com.graysoncraw.ggainsbackend.model.User;
 import com.graysoncraw.ggainsbackend.model.WorkoutCycle;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -17,9 +19,14 @@ public interface WorkoutCycleRepository extends JpaRepository<WorkoutCycle, Long
     Optional<WorkoutCycle> findByUserAndIsActiveTrue(User user);
     Optional<WorkoutCycle> findByUser_FirebaseUidAndIsActiveTrue(String firebaseUid);
     List<WorkoutCycle> findByUser_FirebaseUidOrderByCycleNumberDesc(String firebaseUid);
-    Optional<WorkoutCycle> findFirstByUser_FirebaseUidAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByCycleNumberDesc(
-            String firebaseUid,
-            LocalDate startDate,
-            LocalDate endDate
+
+    @Query("SELECT wc FROM WorkoutCycle wc " +
+            "WHERE wc.user.firebaseUid = :firebaseUid " +
+            "AND wc.startDate <= :date " +
+            "AND wc.endDate >= :date " +
+            "ORDER BY wc.cycleNumber DESC")
+    Optional<WorkoutCycle> findActiveCycleForDate(
+            @Param("firebaseUid") String firebaseUid,
+            @Param("date") LocalDate date
     );
 }

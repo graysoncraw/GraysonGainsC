@@ -1,6 +1,6 @@
 package com.graysoncraw.ggainsbackend.controller;
 
-import com.graysoncraw.ggainsbackend.dto.workoutsession.WorkoutExerciseResponseDTO;
+import com.graysoncraw.ggainsbackend.dto.workoutexercise.WorkoutExerciseResponseDTO;
 import com.graysoncraw.ggainsbackend.dto.workoutsession.WorkoutSessionResponseDTO;
 import com.graysoncraw.ggainsbackend.exception.GlobalExceptionHandler;
 import com.graysoncraw.ggainsbackend.model.LiftType;
@@ -60,15 +60,13 @@ class WorkoutSessionControllerWebMvcTest {
         exercise.setReps(3);
         exercise.setSetNumber(1);
         exercise.setIsMainLift(true);
-        response.setExercises(List.of(exercise));
 
         doNothing().when(authenticatedUserGuard).requireUidMatches("uid-123");
         when(workoutSessionService.getWorkoutSession("uid-123", LocalDate.of(2026, 6, 15))).thenReturn(response);
 
         mockMvc.perform(get("/api/users/uid-123/workout-sessions/2026-06-15"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(9))
-                .andExpect(jsonPath("$.exercises[0].exerciseName").value("Bench Press"));
+                .andExpect(jsonPath("$.id").value(9));
     }
 
     @Test

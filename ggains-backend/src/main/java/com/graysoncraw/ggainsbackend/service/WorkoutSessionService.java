@@ -1,7 +1,7 @@
 package com.graysoncraw.ggainsbackend.service;
 
-import com.graysoncraw.ggainsbackend.dto.workoutsession.WorkoutExerciseRequestDTO;
-import com.graysoncraw.ggainsbackend.dto.workoutsession.WorkoutExerciseResponseDTO;
+import com.graysoncraw.ggainsbackend.dto.workoutexercise.WorkoutExerciseRequestDTO;
+import com.graysoncraw.ggainsbackend.dto.workoutexercise.WorkoutExerciseResponseDTO;
 import com.graysoncraw.ggainsbackend.dto.workoutsession.WorkoutSessionRequestDTO;
 import com.graysoncraw.ggainsbackend.dto.workoutsession.WorkoutSessionResponseDTO;
 import com.graysoncraw.ggainsbackend.model.User;
@@ -48,11 +48,7 @@ public class WorkoutSessionService {
                 .orElseThrow(() -> new NoSuchElementException("User not found"));
 
         WorkoutCycle workoutCycle = workoutCycleRepository
-                .findFirstByUser_FirebaseUidAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByCycleNumberDesc(
-                        firebaseUid,
-                        request.getDate(),
-                        request.getDate()
-                )
+                .findActiveCycleForDate(firebaseUid, request.getDate())
                 .orElseThrow(() -> new NoSuchElementException("No workout cycle found for selected date"));
 
         WorkoutSession session = workoutSessionRepository.findByUser_FirebaseUidAndDate(firebaseUid, request.getDate())
@@ -99,21 +95,6 @@ public class WorkoutSessionService {
         response.setMainLiftType(session.getMainLiftType());
         response.setWeekNumber(session.getWeekNumber());
         response.setNotes(session.getNotes());
-        response.setExercises(session.getExercises() == null ? List.of() : session.getExercises().stream()
-                .sorted(Comparator.comparing(WorkoutExercise::getSetNumber))
-                .map(this::toResponse)
-                .toList());
-        return response;
-    }
-
-    private WorkoutExerciseResponseDTO toResponse(WorkoutExercise exercise) {
-        WorkoutExerciseResponseDTO response = new WorkoutExerciseResponseDTO();
-        response.setId(exercise.getId());
-        response.setExerciseName(exercise.getExerciseName());
-        response.setWeight(exercise.getWeight());
-        response.setReps(exercise.getReps());
-        response.setSetNumber(exercise.getSetNumber());
-        response.setIsMainLift(exercise.getIsMainLift());
         return response;
     }
 }

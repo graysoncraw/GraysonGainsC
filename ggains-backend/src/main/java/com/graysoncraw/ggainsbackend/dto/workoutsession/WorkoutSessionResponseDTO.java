@@ -1,5 +1,6 @@
 package com.graysoncraw.ggainsbackend.dto.workoutsession;
 
+import com.graysoncraw.ggainsbackend.dto.workoutexercise.WorkoutExerciseResponseDTO;
 import com.graysoncraw.ggainsbackend.model.LiftType;
 import lombok.Data;
 
@@ -16,5 +17,4 @@ public class WorkoutSessionResponseDTO {
     private LiftType mainLiftType;
     private Integer weekNumber;
     private String notes;
-    private List<WorkoutExerciseResponseDTO> exercises;
 }

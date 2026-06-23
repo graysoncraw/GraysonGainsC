@@ -1,7 +1,6 @@
 package com.graysoncraw.ggainsbackend.controller;
 
 import com.graysoncraw.ggainsbackend.dto.workoutcycle.PrescribedWorkoutDTO;
-import com.graysoncraw.ggainsbackend.dto.workoutcycle.WorkoutCycleOutcomeRequestDTO;
 import com.graysoncraw.ggainsbackend.dto.workoutcycle.WorkoutCycleResponseDTO;
 import com.graysoncraw.ggainsbackend.exception.GlobalExceptionHandler;
 import com.graysoncraw.ggainsbackend.mapper.WorkoutCycleMapper;
@@ -21,9 +20,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
-import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
@@ -81,38 +78,6 @@ class WorkoutCycleControllerWebMvcTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.weekNumber").value(1))
                 .andExpect(jsonPath("$.liftType").value("BENCH"));
-    }
-
-    @Test
-    void updateActiveCycleOutcomesReturnsMappedCycle() throws Exception {
-        WorkoutCycle updatedCycle = WorkoutCycle.builder().id(9L).build();
-        WorkoutCycleResponseDTO response = new WorkoutCycleResponseDTO();
-        response.setId(9L);
-        response.setFirebaseUid("uid-123");
-        response.setBenchCompleted(true);
-        response.setSquatCompleted(false);
-        response.setDeadliftCompleted(false);
-        response.setShoulderPressCompleted(true);
-
-        doNothing().when(authenticatedUserGuard).requireUidMatches("uid-123");
-        when(workoutCycleService.updateActiveCycleOutcomes(any(String.class), any(WorkoutCycleOutcomeRequestDTO.class)))
-                .thenReturn(updatedCycle);
-        when(workoutCycleMapper.toResponse(updatedCycle)).thenReturn(response);
-
-        mockMvc.perform(put("/api/users/uid-123/cycles/active/outcomes")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "benchCompleted": true,
-                                  "squatCompleted": false,
-                                  "deadliftCompleted": false,
-                                  "shoulderPressCompleted": true
-                                }
-                                """))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(9))
-                .andExpect(jsonPath("$.benchCompleted").value(true))
-                .andExpect(jsonPath("$.shoulderPressCompleted").value(true));
     }
 
     @Test
