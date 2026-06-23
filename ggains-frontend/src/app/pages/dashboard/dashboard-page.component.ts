@@ -2,7 +2,6 @@ import { Component, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { SessionService } from '../../auth/session.service';
-import { PrescribedWorkout, WorkoutCycleApiService, WorkoutCycleResponse } from '../../api/workout-cycle-api.service';
 
 @Component({
   selector: 'app-dashboard-page',
@@ -11,9 +10,6 @@ import { PrescribedWorkout, WorkoutCycleApiService, WorkoutCycleResponse } from 
   styleUrl: './dashboard-page.component.scss',
 })
 export class DashboardPageComponent {
-  protected readonly activeCycle = signal<WorkoutCycleResponse | null>(null);
-  protected readonly prescribedWorkout = signal<PrescribedWorkout | null>(null);
-  protected readonly historyCount = signal(0);
   protected readonly loading = signal(true);
   protected readonly error = signal('');
 
@@ -21,7 +17,6 @@ export class DashboardPageComponent {
 
   constructor(
     private readonly session: SessionService,
-    private readonly workoutCycleApi: WorkoutCycleApiService,
   ) {
     void this.load();
   }
@@ -35,22 +30,5 @@ export class DashboardPageComponent {
 
     this.loading.set(true);
     this.error.set('');
-
-    try {
-      const today = new Date().toISOString().slice(0, 10);
-      const [activeCycle, prescribedWorkout, history] = await Promise.all([
-        this.workoutCycleApi.getActiveCycle(firebaseUid).catch(() => null),
-        this.workoutCycleApi.getPrescribedWorkout(firebaseUid, today).catch(() => null),
-        this.workoutCycleApi.getCycleHistory(firebaseUid).catch(() => []),
-      ]);
-
-      this.activeCycle.set(activeCycle);
-      this.prescribedWorkout.set(prescribedWorkout);
-      this.historyCount.set(history.length);
-    } catch (error) {
-      this.error.set(error instanceof Error ? error.message : 'Unable to load dashboard.');
-    } finally {
-      this.loading.set(false);
-    }
   }
 }

@@ -12,106 +12,6 @@
     <div class="status-banner success">{{ success() }}</div>
   }
 
-  @if (!onboardingMode()) {
-    <article class="panel">
-      <div class="section-heading compact">
-        <p>Active cycle</p>
-        <h3>{{ activeCycle() ? 'Cycle #' + activeCycle()!.cycleNumber : 'No active cycle' }}</h3>
-      </div>
-
-      @if (activeCycle()) {
-        <ul class="detail-list">
-          <li><span>Start</span><strong>{{ activeCycle()!.startDate }}</strong></li>
-          <li><span>End</span><strong>{{ activeCycle()!.endDate }}</strong></li>
-          <li><span>Bench TM</span><strong>{{ activeCycle()!.benchTrainingMax }} lbs</strong></li>
-          <li><span>Squat TM</span><strong>{{ activeCycle()!.squatTrainingMax }} lbs</strong></li>
-          <li><span>Deadlift TM</span><strong>{{ activeCycle()!.deadliftTrainingMax }} lbs</strong></li>
-          <li><span>Shoulder TM</span><strong>{{ activeCycle()!.shoulderPressTrainingMax }} lbs</strong></li>
-        </ul>
-      } @else {
-        <p class="subtle-text">No active cycle has been returned yet.</p>
-      }
-    </article>
-
-    <div class="two-column">
-    <article class="panel">
-      <div class="section-heading compact">
-        <p>Prescribed workout</p>
-        <h3>Pick a workout date</h3>
-        <p class="subtle-text">Workout days are marked with a dot. Use the arrow keys to jump between the next and previous prescribed workouts.</p>
-      </div>
-
-      <div class="calendar-shell">
-        <div class="calendar-header">
-          <button type="button" class="secondary-button calendar-nav" aria-label="Previous month" (click)="changeMonth(-1)">←</button>
-          <div class="calendar-header-copy">
-            <strong>{{ monthLabel() }}</strong>
-            <span>{{ selectedDateLabel() }}</span>
-          </div>
-          <button type="button" class="secondary-button calendar-nav" aria-label="Next month" (click)="changeMonth(1)">→</button>
-        </div>
-
-        <div class="calendar-grid">
-          @for (dayLabel of weekdayLabels; track dayLabel) {
-            <div class="calendar-weekday">{{ dayLabel }}</div>
-          }
-
-          @for (day of calendarDays(); track day.isoDate) {
-            <button
-              type="button"
-              class="calendar-day"
-              [class.outside-month]="!day.inCurrentMonth"
-              [class.has-workout]="day.hasWorkout"
-              [class.selected]="day.isSelected"
-              [class.today]="day.isToday"
-              (click)="selectDate(day.isoDate)"
-              [attr.aria-pressed]="day.isSelected"
-              [attr.aria-label]="day.isoDate + (day.hasWorkout ? ', prescribed workout' : ', rest day')"
-            >
-              <span>{{ day.dayNumber }}</span>
-              <span class="calendar-dot" [class.visible]="day.hasWorkout"></span>
-            </button>
-          }
-        </div>
-      </div>
-
-      @if (prescribedWorkout()) {
-        <p class="subtle-text">{{ prescribedWorkout()!.liftType }} · Week {{ prescribedWorkout()!.weekNumber }}</p>
-        <ul class="set-list">
-          @for (set of prescribedWorkout()!.sets; track set.setNumber) {
-            <li>
-              <strong>Set {{ set.setNumber }}</strong>
-              <span>{{ set.weight }} lbs × {{ set.reps }} {{ set.isAmrap ? '+' : '' }}</span>
-            </li>
-          }
-        </ul>
-      } @else {
-        <p class="subtle-text">Select a highlighted date to view the prescribed workout.</p>
-      }
-    </article>
-
-  <article class="panel nested-panel">
-    <div class="section-heading compact">
-      <p>History</p>
-      <h3>Recent cycles</h3>
-    </div>
-
-    @if (history().length) {
-      <div class="history-grid">
-        @for (cycle of history(); track cycle.id) {
-          <div class="history-card">
-            <strong>Cycle #{{ cycle.cycleNumber }}</strong>
-            <span>{{ cycle.startDate }} - {{ cycle.endDate }}</span>
-            <span>{{ cycle.isActive ? 'Active' : 'Complete' }}</span>
-          </div>
-        }
-      </div>
-    } @else {
-      <p class="subtle-text">No cycle history returned yet.</p>
-    }
-  </article>
-  </div>
-
   <article class="panel">
     <div class="form-grid three-up">
       <label>
@@ -162,5 +62,5 @@
       </button>
     </div>
   </article>
-}
+
 </section>

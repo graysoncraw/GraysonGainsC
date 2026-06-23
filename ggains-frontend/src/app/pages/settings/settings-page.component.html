@@ -9,43 +9,10 @@
   }
 
   <article class="panel">
-    <ul class="detail-list">
-      <li><span>Firebase UID</span><strong>{{ firebaseUid() || 'Not signed in' }}</strong></li>
-      <li><span>Backend user</span><strong>{{ backendUser()?.email || 'Not loaded' }}</strong></li>
-    </ul>
 
     <div class="button-row">
-      <button type="button" class="secondary-button" [disabled]="loading()" (click)="refresh()">
-        {{ loading() ? 'Refreshing...' : 'Refresh session' }}
-      </button>
       <button type="button" class="primary-button" (click)="signOut()">Sign out</button>
     </div>
   </article>
 
-  <article class="panel">
-    <div class="section-heading compact">
-      <p>Email lookup</p>
-      <h3>Verify GET /api/users?email=...</h3>
-    </div>
-
-    <div class="button-row">
-      <label class="inline-field">
-        <span>Email</span>
-        <input type="email" [ngModel]="lookupEmail()" (ngModelChange)="lookupEmail.set($event)" placeholder="grayson@example.com" />
-      </label>
-      <button type="button" class="secondary-button" (click)="lookupByEmail()">Lookup</button>
-    </div>
-
-    @if (lookupError()) {
-      <div class="status-banner error">{{ lookupError() }}</div>
-    }
-
-    @if (lookupResult()) {
-      <ul class="detail-list">
-        <li><span>Name</span><strong>{{ lookupResult()!.firstName }} {{ lookupResult()!.lastName }}</strong></li>
-        <li><span>UID</span><strong>{{ lookupResult()!.firebaseUid }}</strong></li>
-        <li><span>Email</span><strong>{{ lookupResult()!.email }}</strong></li>
-      </ul>
-    }
-  </article>
 </section>
