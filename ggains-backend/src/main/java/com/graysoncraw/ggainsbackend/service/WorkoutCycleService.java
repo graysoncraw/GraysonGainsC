@@ -1,8 +1,8 @@
 package com.graysoncraw.ggainsbackend.service;
 
-import com.graysoncraw.ggainsbackend.dto.workoutcycle.CycleProgressRequestDTO;
 import com.graysoncraw.ggainsbackend.dto.workoutcycle.PrescribedSetDTO;
 import com.graysoncraw.ggainsbackend.dto.workoutcycle.PrescribedWorkoutDTO;
+import com.graysoncraw.ggainsbackend.dto.workoutcycle.WorkoutCycleOutcomeRequestDTO;
 import com.graysoncraw.ggainsbackend.model.LiftType;
 import com.graysoncraw.ggainsbackend.model.PersonalRecord;
 import com.graysoncraw.ggainsbackend.model.User;
@@ -17,9 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 
 @Service
@@ -75,6 +73,10 @@ public class WorkoutCycleService {
                 .squatTrainingMax(squatTM)
                 .deadliftTrainingMax(deadliftTM)
                 .shoulderPressTrainingMax(shoulderPressTM)
+                .benchCompleted(false)
+                .squatCompleted(false)
+                .deadliftCompleted(false)
+                .shoulderPressCompleted(false)
                 .benchDay(workoutCycle.getBenchDay())
                 .squatDay(workoutCycle.getSquatDay())
                 .deadliftDay(workoutCycle.getDeadliftDay())
@@ -126,7 +128,16 @@ public class WorkoutCycleService {
         return workout;
     }
 
-    public WorkoutCycle progressToNextCycle(String firebaseUid, CycleProgressRequestDTO request) {
+    public WorkoutCycle updateActiveCycleOutcomes(String firebaseUid, WorkoutCycleOutcomeRequestDTO request) {
+        WorkoutCycle activeCycle = getActiveCycle(firebaseUid);
+        activeCycle.setBenchCompleted(request.getBenchCompleted());
+        activeCycle.setSquatCompleted(request.getSquatCompleted());
+        activeCycle.setDeadliftCompleted(request.getDeadliftCompleted());
+        activeCycle.setShoulderPressCompleted(request.getShoulderPressCompleted());
+        return workoutCycleRepository.save(activeCycle);
+    }
+
+    public WorkoutCycle progressToNextCycle(String firebaseUid) {
         WorkoutCycle currentCycle = getActiveCycle(firebaseUid);
 
         PersonalRecord pr = personalRecordRepository.findByUser_FirebaseUid(firebaseUid)
@@ -135,28 +146,15 @@ public class WorkoutCycleService {
         User user = userRepository.findById(firebaseUid)
                 .orElseThrow(() -> new NoSuchElementException("User not found"));
 
-        Map<LiftType, Boolean> outcomes = validateAndExtractOutcomes(request);
-
-        double newBenchTM = progressedTrainingMax(
-                currentCycle.getBenchTrainingMax(),
+        pr.setBenchPressPR(progressedPersonalRecord(pr.getBenchPressPR(), 5, Boolean.TRUE.equals(currentCycle.getBenchCompleted())));
+        pr.setSquatPR(progressedPersonalRecord(pr.getSquatPR(), 10, Boolean.TRUE.equals(currentCycle.getSquatCompleted())));
+        pr.setDeadliftPR(progressedPersonalRecord(pr.getDeadliftPR(), 10, Boolean.TRUE.equals(currentCycle.getDeadliftCompleted())));
+        pr.setShoulderPressPR(progressedPersonalRecord(
+                pr.getShoulderPressPR(),
                 5,
-                outcomes.get(LiftType.BENCH)
-        );
-        double newSquatTM = progressedTrainingMax(
-                currentCycle.getSquatTrainingMax(),
-                10,
-                outcomes.get(LiftType.SQUAT)
-        );
-        double newDeadliftTM = progressedTrainingMax(
-                currentCycle.getDeadliftTrainingMax(),
-                10,
-                outcomes.get(LiftType.DEADLIFT)
-        );
-        double newShoulderPressTM = progressedTrainingMax(
-                currentCycle.getShoulderPressTrainingMax(),
-                5,
-                outcomes.get(LiftType.SHOULDER_PRESS)
-        );
+                Boolean.TRUE.equals(currentCycle.getShoulderPressCompleted())
+        ));
+        personalRecordRepository.save(pr);
 
         LocalDate newStartDate = currentCycle.getEndDate().plusDays(1);
         LocalDate newEndDate = newStartDate.plusWeeks(4);
@@ -169,10 +167,14 @@ public class WorkoutCycleService {
                 .cycleNumber(currentCycle.getCycleNumber() + 1)
                 .startDate(newStartDate)
                 .endDate(newEndDate)
-                .benchTrainingMax(newBenchTM)
-                .squatTrainingMax(newSquatTM)
-                .deadliftTrainingMax(newDeadliftTM)
-                .shoulderPressTrainingMax(newShoulderPressTM)
+                .benchTrainingMax(calcTrainingMax(pr.getBenchPressPR()))
+                .squatTrainingMax(calcTrainingMax(pr.getSquatPR()))
+                .deadliftTrainingMax(calcTrainingMax(pr.getDeadliftPR()))
+                .shoulderPressTrainingMax(calcTrainingMax(pr.getShoulderPressPR()))
+                .benchCompleted(false)
+                .squatCompleted(false)
+                .deadliftCompleted(false)
+                .shoulderPressCompleted(false)
                 .isActive(true)
                 .build();
 
@@ -188,13 +190,13 @@ public class WorkoutCycleService {
         if (!workoutCycleRepository.existsById(workoutCycle.getId())) {
             throw new NoSuchElementException("Workout cycle with ID " + workoutCycle.getId() + " not found");
         }
-        var t = getActiveCycle(workoutCycle.getUser().getFirebaseUid());
-        t.setStartDate(workoutCycle.getStartDate());
-        t.setBenchDay(workoutCycle.getBenchDay());
-        t.setSquatDay(workoutCycle.getSquatDay());
-        t.setDeadliftDay(workoutCycle.getDeadliftDay());
-        t.setShoulderPressDay(workoutCycle.getShoulderPressDay());
-        return workoutCycleRepository.save(t);
+        var activeCycle = getActiveCycle(workoutCycle.getUser().getFirebaseUid());
+        activeCycle.setStartDate(workoutCycle.getStartDate());
+        activeCycle.setBenchDay(workoutCycle.getBenchDay());
+        activeCycle.setSquatDay(workoutCycle.getSquatDay());
+        activeCycle.setDeadliftDay(workoutCycle.getDeadliftDay());
+        activeCycle.setShoulderPressDay(workoutCycle.getShoulderPressDay());
+        return workoutCycleRepository.save(activeCycle);
     }
 
     // ==================== Helper Methods ====================
@@ -269,27 +271,11 @@ public class WorkoutCycleService {
         return roundToNearest5(weight * 0.90);
     }
 
-    private Map<LiftType, Boolean> validateAndExtractOutcomes(CycleProgressRequestDTO request) {
-        if (request == null || request.getLiftOutcomes() == null) {
-            throw new IllegalArgumentException("liftOutcomes is required");
+    private double progressedPersonalRecord(double currentPersonalRecord, double increment, boolean successfulThisCycle) {
+        if (!successfulThisCycle) {
+            return currentPersonalRecord;
         }
 
-        Map<LiftType, Boolean> outcomes = request.getLiftOutcomes();
-        for (LiftType liftType : EnumSet.allOf(LiftType.class)) {
-            if (!outcomes.containsKey(liftType)) {
-                throw new IllegalArgumentException("Missing lift outcome for " + liftType);
-            }
-            if (outcomes.get(liftType) == null) {
-                throw new IllegalArgumentException("Lift outcome cannot be null for " + liftType);
-            }
-        }
-        return outcomes;
-    }
-
-    private double progressedTrainingMax(double currentTrainingMax, double increment, boolean successfulThisCycle) {
-        double nextTrainingMax = successfulThisCycle
-                ? currentTrainingMax + increment
-                : currentTrainingMax;
-        return roundToNearest5(nextTrainingMax);
+        return roundToNearest5(currentPersonalRecord + increment);
     }
 }

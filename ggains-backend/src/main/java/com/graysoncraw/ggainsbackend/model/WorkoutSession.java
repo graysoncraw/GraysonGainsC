@@ -1,5 +1,6 @@
 package com.graysoncraw.ggainsbackend.model;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -33,12 +34,12 @@ public class WorkoutSession {
     private LocalDate date;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "main_lift_type", nullable = false)
-    @NotNull(message = "Main lift type is required")
+    @Column(name = "main_lift_type")
+    @Nullable
     private LiftType mainLiftType;
 
-    @Column(name = "week_number", nullable = false)
-    @NotNull(message = "Week number is required")
+    @Column(name = "week_number")
+    @Nullable
     @Min(value = 1, message = "Week number must be between 1 and 4")
     @Max(value = 4, message = "Week number must be between 1 and 4")
     private Integer weekNumber;

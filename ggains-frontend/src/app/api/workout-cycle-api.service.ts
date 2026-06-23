@@ -6,8 +6,11 @@ import { BACKEND_API_BASE_URL } from '../auth/app-config';
 
 export type LiftType = 'BENCH' | 'SQUAT' | 'DEADLIFT' | 'SHOULDER_PRESS';
 
-export interface CycleProgressRequest {
-  liftOutcomes: Record<LiftType, boolean>;
+export interface WorkoutCycleOutcomeRequest {
+  benchCompleted: boolean;
+  squatCompleted: boolean;
+  deadliftCompleted: boolean;
+  shoulderPressCompleted: boolean;
 }
 
 export type DayOfWeek =
@@ -37,6 +40,10 @@ export interface WorkoutCycleResponse {
   squatTrainingMax: number;
   deadliftTrainingMax: number;
   shoulderPressTrainingMax: number;
+  benchCompleted: boolean;
+  squatCompleted: boolean;
+  deadliftCompleted: boolean;
+  shoulderPressCompleted: boolean;
   benchDay: DayOfWeek;
   squatDay: DayOfWeek;
   deadliftDay: DayOfWeek;
@@ -88,9 +95,15 @@ export class WorkoutCycleApiService {
     );
   }
 
-  progressToNextCycle(firebaseUid: string, request: CycleProgressRequest): Promise<WorkoutCycleResponse> {
+  updateActiveCycleOutcomes(firebaseUid: string, request: WorkoutCycleOutcomeRequest): Promise<WorkoutCycleResponse> {
     return firstValueFrom(
-      this.http.post<WorkoutCycleResponse>(`${BACKEND_API_BASE_URL}/api/users/${firebaseUid}/cycles/progress`, request),
+      this.http.put<WorkoutCycleResponse>(`${BACKEND_API_BASE_URL}/api/users/${firebaseUid}/cycles/active/outcomes`, request),
+    );
+  }
+
+  progressToNextCycle(firebaseUid: string): Promise<WorkoutCycleResponse> {
+    return firstValueFrom(
+      this.http.post<WorkoutCycleResponse>(`${BACKEND_API_BASE_URL}/api/users/${firebaseUid}/cycles/progress`, {}),
     );
   }
 

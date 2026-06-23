@@ -58,6 +58,18 @@ public class WorkoutCycle {
     @Min(value = 0, message = "Shoulder press training max must be positive")
     private Double shoulderPressTrainingMax;
 
+    @Column(name = "bench_completed")
+    private Boolean benchCompleted;
+
+    @Column(name = "squat_completed")
+    private Boolean squatCompleted;
+
+    @Column(name = "deadlift_completed")
+    private Boolean deadliftCompleted;
+
+    @Column(name = "shoulder_press_completed")
+    private Boolean shoulderPressCompleted;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "bench_day", nullable = false)
     @NotNull(message = "Bench day is required")

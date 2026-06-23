@@ -9,6 +9,7 @@ import { CyclesPageComponent } from './pages/cycles/cycles-page.component';
 import { DashboardPageComponent } from './pages/dashboard/dashboard-page.component';
 import { PersonalRecordsPageComponent } from './pages/personal-records/personal-records-page.component';
 import { ProfilePageComponent } from './pages/profile/profile-page.component';
+import { WorkoutLogsPageComponent } from './pages/workout-logs/workout-logs-page.component';
 import { SetupFinishPageComponent } from './pages/setup/setup-finish-page.component';
 import { SetupShellComponent } from './pages/setup/setup-shell.component';
 import { SettingsPageComponent } from './pages/settings/settings-page.component';
@@ -77,6 +78,10 @@ export const routes: Routes = [
       {
         path: 'cycles',
         component: CyclesPageComponent,
+      },
+      {
+        path: 'logs',
+        component: WorkoutLogsPageComponent,
       },
       {
         path: 'settings',

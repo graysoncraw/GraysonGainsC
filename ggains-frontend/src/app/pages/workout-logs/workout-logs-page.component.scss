@@ -82,6 +82,10 @@
   border-color: rgba(201, 215, 255, 0.3);
 }
 
+.calendar-day.has-log {
+  box-shadow: inset 0 0 0 1px rgba(110, 214, 170, 0.25);
+}
+
 .calendar-day.selected {
   background: linear-gradient(135deg, rgba(201, 215, 255, 0.26), rgba(201, 215, 255, 0.12));
   border-color: rgba(201, 215, 255, 0.72);
@@ -93,17 +97,136 @@
   outline-offset: 2px;
 }
 
+.calendar-markers {
+  display: flex;
+  gap: 5px;
+  align-self: center;
+}
+
 .calendar-dot {
   width: 8px;
   height: 8px;
   border-radius: 999px;
   background: transparent;
-  align-self: center;
 }
 
 .calendar-dot.visible {
-  background: linear-gradient(135deg, var(--accent-strong) 0%, var(--accent) 100%);
   box-shadow: 0 0 0 4px rgba(201, 215, 255, 0.12);
+}
+
+.calendar-dot.workout.visible {
+  background: linear-gradient(135deg, var(--accent-strong) 0%, var(--accent) 100%);
+}
+
+.calendar-dot.log.visible {
+  background: linear-gradient(135deg, #6ed6aa 0%, #3fae7f 100%);
+}
+
+.history-block,
+.log-section {
+  display: grid;
+  gap: 12px;
+}
+
+.history-block {
+  margin-top: 18px;
+}
+
+.history-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.history-card {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  padding: 14px 16px;
+  display: grid;
+  gap: 4px;
+  text-align: left;
+}
+
+.history-card strong {
+  font-size: 0.98rem;
+}
+
+.history-card span {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.main-lift-list,
+.saved-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.set-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.set-meta {
+  display: grid;
+  gap: 2px;
+}
+
+.set-meta strong {
+  font-size: 0.98rem;
+}
+
+.set-meta span,
+.set-load {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.accessory-list {
+  display: grid;
+  gap: 10px;
+}
+
+.accessory-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.accessory-remove {
+  white-space: nowrap;
+}
+
+.button-row.split {
+  justify-content: space-between;
+}
+
+textarea {
+  width: 100%;
+  min-height: 110px;
+  resize: vertical;
+}
+
+@media (max-width: 900px) {
+  .accessory-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .accessory-remove {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 640px) {

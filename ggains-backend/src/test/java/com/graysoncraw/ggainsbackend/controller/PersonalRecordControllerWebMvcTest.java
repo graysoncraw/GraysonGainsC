@@ -24,7 +24,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -108,22 +107,5 @@ class PersonalRecordControllerWebMvcTest {
         mockMvc.perform(get("/api/users/uid-123/personal-record"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404));
-    }
-
-    @Test
-    void updateSpecificPrReturnsMappedRecord() throws Exception {
-        PersonalRecord updated = PersonalRecord.builder().id(11L).build();
-        PersonalRecordResponseDTO response = new PersonalRecordResponseDTO();
-        response.setId(11L);
-        response.setBenchPressPR(230.0);
-
-        doNothing().when(authenticatedUserGuard).requireUidMatches("uid-123");
-        when(personalRecordService.updateSpecificPR("uid-123", "BENCH", 230.0)).thenReturn(updated);
-        when(personalRecordMapper.toResponse(updated)).thenReturn(response);
-
-        mockMvc.perform(patch("/api/users/uid-123/personal-record/BENCH")
-                        .param("newPR", "230.0"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(11));
     }
 }

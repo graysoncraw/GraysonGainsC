@@ -2,8 +2,8 @@ package com.graysoncraw.ggainsbackend.controller;
 
 import com.graysoncraw.ggainsbackend.dto.personalrecord.PersonalRecordRequestDTO;
 import com.graysoncraw.ggainsbackend.dto.personalrecord.PersonalRecordResponseDTO;
-import com.graysoncraw.ggainsbackend.dto.workoutcycle.CycleProgressRequestDTO;
 import com.graysoncraw.ggainsbackend.dto.workoutcycle.PrescribedWorkoutDTO;
+import com.graysoncraw.ggainsbackend.dto.workoutcycle.WorkoutCycleOutcomeRequestDTO;
 import com.graysoncraw.ggainsbackend.dto.workoutcycle.WorkoutCycleRequestDTO;
 import com.graysoncraw.ggainsbackend.dto.workoutcycle.WorkoutCycleResponseDTO;
 import com.graysoncraw.ggainsbackend.mapper.WorkoutCycleMapper;
@@ -58,6 +58,16 @@ public class WorkoutCycleController {
         return workoutCycleMapper.toResponse(updatedRecord);
     }
 
+    @PutMapping("/active/outcomes")
+    public WorkoutCycleResponseDTO updateActiveCycleOutcomes(
+            @PathVariable String firebaseUid,
+            @Valid @RequestBody WorkoutCycleOutcomeRequestDTO request
+    ) {
+        authenticatedUserGuard.requireUidMatches(firebaseUid);
+        WorkoutCycle updatedCycle = workoutCycleService.updateActiveCycleOutcomes(firebaseUid, request);
+        return workoutCycleMapper.toResponse(updatedCycle);
+    }
+
     @GetMapping("/active")
     public WorkoutCycleResponseDTO getActiveCycle(@PathVariable String firebaseUid) {
         authenticatedUserGuard.requireUidMatches(firebaseUid);
@@ -84,11 +94,10 @@ public class WorkoutCycleController {
 
     @PostMapping("/progress")
     public WorkoutCycleResponseDTO progressToNextCycle(
-            @PathVariable String firebaseUid,
-            @Valid @RequestBody CycleProgressRequestDTO request
+            @PathVariable String firebaseUid
     ) {
         authenticatedUserGuard.requireUidMatches(firebaseUid);
-        WorkoutCycle cycle = workoutCycleService.progressToNextCycle(firebaseUid, request);
+        WorkoutCycle cycle = workoutCycleService.progressToNextCycle(firebaseUid);
         return workoutCycleMapper.toResponse(cycle);
     }
 }

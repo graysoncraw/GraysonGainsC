@@ -15,6 +15,10 @@ public class WorkoutCycleResponseDTO {
     private Double squatTrainingMax;
     private Double deadliftTrainingMax;
     private Double shoulderPressTrainingMax;
+    private Boolean benchCompleted;
+    private Boolean squatCompleted;
+    private Boolean deadliftCompleted;
+    private Boolean shoulderPressCompleted;
     private String benchDay;
     private String squatDay;
     private String deadliftDay;

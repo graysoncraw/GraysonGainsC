@@ -1,7 +1,7 @@
 package com.graysoncraw.ggainsbackend.controller;
 
-import com.graysoncraw.ggainsbackend.dto.workoutcycle.CycleProgressRequestDTO;
 import com.graysoncraw.ggainsbackend.dto.workoutcycle.PrescribedWorkoutDTO;
+import com.graysoncraw.ggainsbackend.dto.workoutcycle.WorkoutCycleOutcomeRequestDTO;
 import com.graysoncraw.ggainsbackend.dto.workoutcycle.WorkoutCycleResponseDTO;
 import com.graysoncraw.ggainsbackend.exception.GlobalExceptionHandler;
 import com.graysoncraw.ggainsbackend.mapper.WorkoutCycleMapper;
@@ -31,6 +31,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -83,32 +84,51 @@ class WorkoutCycleControllerWebMvcTest {
     }
 
     @Test
-    void progressToNextCycleReturnsBadRequestWhenLiftOutcomeMissing() throws Exception {
-        Map<LiftType, Boolean> outcomes = new EnumMap<>(LiftType.class);
-        outcomes.put(LiftType.BENCH, true);
-        outcomes.put(LiftType.SQUAT, true);
-        outcomes.put(LiftType.SHOULDER_PRESS, false);
-        CycleProgressRequestDTO request = new CycleProgressRequestDTO();
-        request.setLiftOutcomes(outcomes);
+    void updateActiveCycleOutcomesReturnsMappedCycle() throws Exception {
+        WorkoutCycle updatedCycle = WorkoutCycle.builder().id(9L).build();
+        WorkoutCycleResponseDTO response = new WorkoutCycleResponseDTO();
+        response.setId(9L);
+        response.setFirebaseUid("uid-123");
+        response.setBenchCompleted(true);
+        response.setSquatCompleted(false);
+        response.setDeadliftCompleted(false);
+        response.setShoulderPressCompleted(true);
 
         doNothing().when(authenticatedUserGuard).requireUidMatches("uid-123");
-        when(workoutCycleService.progressToNextCycle(any(String.class), any(CycleProgressRequestDTO.class)))
-                .thenThrow(new IllegalArgumentException("Missing lift outcome for DEADLIFT"));
+        when(workoutCycleService.updateActiveCycleOutcomes(any(String.class), any(WorkoutCycleOutcomeRequestDTO.class)))
+                .thenReturn(updatedCycle);
+        when(workoutCycleMapper.toResponse(updatedCycle)).thenReturn(response);
 
-        mockMvc.perform(post("/api/users/uid-123/cycles/progress")
+        mockMvc.perform(put("/api/users/uid-123/cycles/active/outcomes")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "liftOutcomes": {
-                                    "BENCH": true,
-                                    "SQUAT": true,
-                                    "SHOULDER_PRESS": false
-                                  }
+                                  "benchCompleted": true,
+                                  "squatCompleted": false,
+                                  "deadliftCompleted": false,
+                                  "shoulderPressCompleted": true
                                 }
                                 """))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.message").value("Missing lift outcome for DEADLIFT"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(9))
+                .andExpect(jsonPath("$.benchCompleted").value(true))
+                .andExpect(jsonPath("$.shoulderPressCompleted").value(true));
+    }
+
+    @Test
+    void progressToNextCycleReturnsMappedCycle() throws Exception {
+        WorkoutCycle cycle = WorkoutCycle.builder().id(12L).build();
+        WorkoutCycleResponseDTO response = new WorkoutCycleResponseDTO();
+        response.setId(12L);
+        response.setFirebaseUid("uid-123");
+
+        doNothing().when(authenticatedUserGuard).requireUidMatches("uid-123");
+        when(workoutCycleService.progressToNextCycle("uid-123")).thenReturn(cycle);
+        when(workoutCycleMapper.toResponse(cycle)).thenReturn(response);
+
+        mockMvc.perform(post("/api/users/uid-123/cycles/progress"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(12));
     }
 
     @Test

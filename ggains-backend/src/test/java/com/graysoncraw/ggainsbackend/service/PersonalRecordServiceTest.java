@@ -2,10 +2,10 @@ package com.graysoncraw.ggainsbackend.service;
 
 import com.graysoncraw.ggainsbackend.model.PersonalRecord;
 import com.graysoncraw.ggainsbackend.model.User;
+import com.graysoncraw.ggainsbackend.model.WorkoutCycle;
 import com.graysoncraw.ggainsbackend.repository.PersonalRecordRepository;
 import com.graysoncraw.ggainsbackend.repository.UserRepository;
 import com.graysoncraw.ggainsbackend.repository.WorkoutCycleRepository;
-import com.graysoncraw.ggainsbackend.repository.WorkoutScheduleRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -19,7 +19,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -31,8 +30,6 @@ class PersonalRecordServiceTest {
     @Mock
     private PersonalRecordRepository personalRecordRepository;
     @Mock
-    private WorkoutScheduleRepository workoutScheduleRepository;
-    @Mock
     private WorkoutCycleRepository workoutCycleRepository;
     @Mock
     private WorkoutCycleService workoutCycleService;
@@ -41,59 +38,76 @@ class PersonalRecordServiceTest {
     private PersonalRecordService personalRecordService;
 
     @Test
-    void createPersonalRecordAutoCreatesFirstCycleWhenScheduleExistsAndNoCycle() {
+    void createPersonalRecordAssignsTheAuthenticatedUserAndSavesTheRecord() {
         String uid = "uid-123";
         User user = User.builder().firebaseUid(uid).build();
         PersonalRecord request = PersonalRecord.builder().benchPressPR(225.0).build();
 
         when(userRepository.findById(uid)).thenReturn(Optional.of(user));
         when(personalRecordRepository.save(any(PersonalRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(workoutScheduleRepository.findByUser_FirebaseUid(uid)).thenReturn(Optional.of(new com.graysoncraw.ggainsbackend.model.WorkoutSchedule()));
-        when(workoutCycleRepository.findByUser_FirebaseUid(uid)).thenReturn(List.of());
 
-        personalRecordService.createPersonalRecord(uid, request);
+        PersonalRecord saved = personalRecordService.createPersonalRecord(uid, request);
 
         assertEquals(user, request.getUser());
-        verify(workoutCycleService).createFirstCycle(uid);
+        assertEquals(user, saved.getUser());
+        verify(personalRecordRepository).save(request);
     }
 
     @Test
-    void createPersonalRecordDoesNotAutoCreateFirstCycleWhenPrerequisitesMissing() {
-        String uid = "uid-123";
-        User user = User.builder().firebaseUid(uid).build();
-        PersonalRecord request = PersonalRecord.builder().benchPressPR(225.0).build();
+    void getPersonalRecordByUserFirebaseUidReturnsTheSavedRecordWhenPresent() {
+        PersonalRecord record = PersonalRecord.builder().id(1L).build();
+        when(personalRecordRepository.findByUser_FirebaseUid("uid-123")).thenReturn(Optional.of(record));
 
-        when(userRepository.findById(uid)).thenReturn(Optional.of(user));
-        when(personalRecordRepository.save(any(PersonalRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(workoutScheduleRepository.findByUser_FirebaseUid(uid)).thenReturn(Optional.empty());
+        Optional<PersonalRecord> loaded = personalRecordService.getPersonalRecordByUserFirebaseUid("uid-123");
 
-        personalRecordService.createPersonalRecord(uid, request);
-
-        verify(workoutCycleService, never()).createFirstCycle(uid);
+        assertEquals(Optional.of(record), loaded);
     }
 
     @Test
-    void getPersonalRecordByUserFirebaseUidThrowsWhenMissing() {
+    void getPersonalRecordByUserFirebaseUidReturnsEmptyWhenMissing() {
         when(personalRecordRepository.findByUser_FirebaseUid("uid-404")).thenReturn(Optional.empty());
 
-        NoSuchElementException exception = assertThrows(
-                NoSuchElementException.class,
-                () -> personalRecordService.getPersonalRecordByUserFirebaseUid("uid-404")
-        );
-
-        assertEquals("Personal record for user with Firebase UID uid-404 not found", exception.getMessage());
+        assertEquals(Optional.empty(), personalRecordService.getPersonalRecordByUserFirebaseUid("uid-404"));
     }
 
     @Test
-    void updateSpecificPRThrowsForInvalidLiftType() {
-        PersonalRecord existing = PersonalRecord.builder().id(1L).benchPressPR(200.0).build();
-        when(personalRecordRepository.findByUser_FirebaseUid("uid-123")).thenReturn(Optional.of(existing));
+    void updatePersonalRecordSyncsTheActiveCycleTrainingMaxes() {
+        String uid = "uid-123";
+        User user = User.builder().firebaseUid(uid).build();
+        PersonalRecord request = PersonalRecord.builder()
+                .id(8L)
+                .user(user)
+                .benchPressPR(230.0)
+                .squatPR(345.0)
+                .deadliftPR(390.0)
+                .shoulderPressPR(140.0)
+                .build();
+        WorkoutCycle activeCycle = WorkoutCycle.builder()
+                .id(5L)
+                .user(user)
+                .benchTrainingMax(200.0)
+                .squatTrainingMax(300.0)
+                .deadliftTrainingMax(350.0)
+                .shoulderPressTrainingMax(120.0)
+                .build();
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> personalRecordService.updateSpecificPR("uid-123", "ROW", 100.0)
-        );
+        when(personalRecordRepository.existsById(8L)).thenReturn(true);
+        when(workoutCycleService.getActiveCycle(uid)).thenReturn(activeCycle);
+        when(workoutCycleService.calcTrainingMax(230.0)).thenReturn(205.0);
+        when(workoutCycleService.calcTrainingMax(345.0)).thenReturn(310.0);
+        when(workoutCycleService.calcTrainingMax(390.0)).thenReturn(350.0);
+        when(workoutCycleService.calcTrainingMax(140.0)).thenReturn(125.0);
+        when(workoutCycleRepository.save(any(WorkoutCycle.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(personalRecordRepository.save(any(PersonalRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        assertEquals("Invalid lift type: ROW", exception.getMessage());
+        PersonalRecord saved = personalRecordService.updatePersonalRecord(request);
+
+        assertEquals(205.0, activeCycle.getBenchTrainingMax());
+        assertEquals(310.0, activeCycle.getSquatTrainingMax());
+        assertEquals(350.0, activeCycle.getDeadliftTrainingMax());
+        assertEquals(125.0, activeCycle.getShoulderPressTrainingMax());
+        assertEquals(request, saved);
+        verify(workoutCycleRepository).save(activeCycle);
+        verify(personalRecordRepository).save(request);
     }
 }

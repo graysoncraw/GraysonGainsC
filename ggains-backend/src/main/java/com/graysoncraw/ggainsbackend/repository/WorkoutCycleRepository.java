@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDate;
 
 @Repository
 public interface WorkoutCycleRepository extends JpaRepository<WorkoutCycle, Long> {
@@ -16,4 +17,9 @@ public interface WorkoutCycleRepository extends JpaRepository<WorkoutCycle, Long
     Optional<WorkoutCycle> findByUserAndIsActiveTrue(User user);
     Optional<WorkoutCycle> findByUser_FirebaseUidAndIsActiveTrue(String firebaseUid);
     List<WorkoutCycle> findByUser_FirebaseUidOrderByCycleNumberDesc(String firebaseUid);
+    Optional<WorkoutCycle> findFirstByUser_FirebaseUidAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByCycleNumberDesc(
+            String firebaseUid,
+            LocalDate startDate,
+            LocalDate endDate
+    );
 }
